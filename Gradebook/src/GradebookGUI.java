@@ -8,20 +8,23 @@
  * 
  */
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -29,134 +32,38 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+import constants.Constants;
+import dbclasses.Assignment;
+import dbclasses.Course;
+import dbclasses.Grade;
+import dbclasses.Semester;
+import dbclasses.Student;
+import dbclasses.User;
 
 public class GradebookGUI extends JApplet {
 
 	// Class Variables
-	private JFrame 		mainFrame;
-	private JTabbedPane tabbedPane;
-	private JPanel 		coursesTab;
-	private JPanel 		studentsTab;
-	private JPanel 		reportsTab;
-	private JPanel 		archiveTab;
-	private JPanel 		importTab;
-	private JPanel 		settingsTab;
-	private JPanel 		coursesPanel1;
-	private JPanel 		coursesPanel2;
-	private JTable 		coursesTable;
-	private JScrollPane coursesTableContainer;
-	private JButton		newAssignmentBtn;
-	private JButton		newCourseBtn;
-	private JComboBox 	coursesSelect;
+	private JFrame 				mainFrame;
+	private JTabbedPane 		tabbedPane;
+	private JPanel 				coursesTab;
+	private JPanel 				reportsTab;
+	private JPanel 				archiveTab;
+	private JPanel 				statisticsTab;
+	private JPanel				settingsTab;
+	private JPanel 				coursesPanel1;
+	private JPanel 				coursesPanel2;
+	private JTable 				coursesTable;
+	private JScrollPane 		coursesTableContainer;
+	private JButton				newAssignmentBtn;
+	private JButton				newCourseBtn;
+	private JComboBox<String> 	courseSelector;
+	private DefaultComboBoxModel<String> dcbm;
 	
-	private String[] columnNames = {
-			"Student First Name",
-            "Student Last Name",
-            "Homework #1",
-            "Quiz #1",
-            "Midterm Exam"
-           	};
-	
-	private String[] courseNames = {
-			"Select Course",
-			"Computer Science I",
-			"Computer Science II",
-			"Data Structures",
-			"Computer Algorithms"
-			};
-	
-	private Object[][] data = {
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Kathy", "Smith",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"John", "Doe",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Sue", "Black",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Jane", "White",
-		     new Integer(95), new Integer(85), new Integer(100)},
-		    {"Joe", "Brown",
-		     new Integer(95), new Integer(85), new Integer(100)}
-		};
+	// Temp Static Objects
+	private static User 	currentUser;
+	private static Semester currentSemester;
 	
 	// GUI Class Constructor
 	public GradebookGUI(){
@@ -164,6 +71,8 @@ public class GradebookGUI extends JApplet {
 	}
 	
 	public static void main(String[] args) {
+		currentUser     = new User    ("gmiller",   Constants.directory);
+		currentSemester = new Semester("Fall 2016", Constants.directory);
 		GradebookGUI gg = new GradebookGUI();
 	}
 	
@@ -197,10 +106,30 @@ public class GradebookGUI extends JApplet {
 		coursesPanel1 	 = new JPanel();
 		coursesPanel1.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
 		newAssignmentBtn = new JButton("New Assignment");
+		newAssignmentBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+			    createAssignment();
+			  } 
+		});
 		newCourseBtn  	 = new JButton("New Course");
-		coursesSelect 	 = new JComboBox(courseNames);
-		coursesSelect.setSelectedIndex(0);
-		coursesPanel1.add(coursesSelect);
+		newCourseBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+			    createCourse();
+			  } 
+		});
+		
+		// Prepare Course Selector Box
+		courseSelector = new JComboBox<String>(prepareCourseSelector());
+		courseSelector.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+				DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
+				coursesTable.setModel(dataModel); 
+				dataModel.fireTableChanged(null);
+			  } 
+		});
+
+		// Add Buttons to control panel
+		coursesPanel1.add(courseSelector);
 		coursesPanel1.add(newAssignmentBtn);
 		coursesPanel1.add(newCourseBtn);
 		coursesPanel1.setBorder(coursesControlTitle);
@@ -209,7 +138,7 @@ public class GradebookGUI extends JApplet {
 		// Course Table Panel
 		coursesPanel2 = new JPanel();
 		coursesPanel2.setLayout(new GridLayout(1,1));
-		coursesTable = new JTable(data, columnNames);
+		coursesTable  = new JTable();
 		coursesTableContainer = new JScrollPane(coursesTable);
 		coursesPanel2.add(coursesTableContainer);
 		coursesPanel2.setBorder(coursesTableTitle);
@@ -220,44 +149,132 @@ public class GradebookGUI extends JApplet {
 		tabbedPane.addTab("Courses", null, coursesTab, "Tooltip for the Courses Panel");
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 		
-
-		/*
-		 * Students Panel Setup
-		 */
-		studentsTab = (JPanel) makeTextPanel("Students Panel");
-		tabbedPane.addTab("Students", null, studentsTab, "Tooltip for the Students Panel");
-		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
-		
 		/*
 		 * Reports Panel Setup
 		 */
 		reportsTab = (JPanel) makeTextPanel("Reports Panel");
 		tabbedPane.addTab("Reports", null, reportsTab, "Tooltip for the Reports Panel");
-		tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
+		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 		
 		/*
 		 * Archive Panel Setup
 		 */
 		archiveTab = (JPanel) makeTextPanel("Archive Panel");
 		tabbedPane.addTab("Archive", null, archiveTab, "Tooltip for the Archive Panel");
-		tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
+		tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
 		
 		/*
-		 * Import Panel Setup
+		 * Statistics Panel Setup
 		 */
-		importTab = (JPanel) makeTextPanel("Import Panel");
-		tabbedPane.addTab("Import", null, importTab, "Tooltip for the Import Panel");
-		tabbedPane.setMnemonicAt(4, KeyEvent.VK_5);
+		statisticsTab = (JPanel) makeTextPanel("Statistics Panel");
+		tabbedPane.addTab("Statistics", null, statisticsTab, "Tooltip for the Statistics Panel");
+		tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
 		
 		/*
 		 * Settings Panel Setup
 		 */
 		settingsTab = (JPanel) makeTextPanel("Settings Panel");
 		tabbedPane.addTab("Settings", null, settingsTab, "Tooltip for the Settings Panel");
-		tabbedPane.setMnemonicAt(5, KeyEvent.VK_6);
+		tabbedPane.setMnemonicAt(4, KeyEvent.VK_5);
 		
 		mainFrame.add(tabbedPane);
 		mainFrame.setVisible(true);
+	}
+	
+	// Create the New Course Wizard
+	public void createCourse(){
+		NewCourseWizardGUI newCourseWizard = new NewCourseWizardGUI();
+		String newCourse = newCourseWizard.getCourseName();
+		dcbm.addElement(newCourse);
+		courseSelector.setSelectedItem(newCourse);
+	}
+	
+	public void createAssignment(){
+		// TODO Create New Assignment Wizard
+		String currentCourse = courseSelector.getSelectedItem().toString();
+		NewAssignmentWizardGUI newAssignmentWizard 
+									= new NewAssignmentWizardGUI(currentCourse,
+																 currentSemester.getSemesterName(),
+																 currentUser.getUsername());
+		
+		DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
+		coursesTable.setModel(dataModel); 
+		dataModel.fireTableChanged(null);
+	}
+	
+	/*
+	 * prepareTable()
+	 * 
+	 * Retrieve and initialize the values for the Gradebook table.
+	 * 
+	 * These values are retrieved by first querying the students.txt file to
+	 * get the list of students in the class, as well as the list of assignments
+	 * in the assignments folder, to get the dimensions for the data array so that
+	 * the array can be initialized. The array can then be populated iteratively by
+	 * mapping the student IDs to the IDs in each assignment text file and plugging 
+	 * those values into the data array.
+	 */
+	public DefaultTableModel prepareTable(String courseName){
+		Course course = new Course( courseName, 
+								    currentSemester.getSemesterName(),
+								    currentSemester.getFolder());
+		
+		// Get students list and assignments list
+		List<Student>    students       = course.getStudents();
+		List<Assignment> assignments    = course.getAllAssignments();
+		String[]         assignmentList = course.getAssignmentList();
+		
+		// Initialize data array with number of students and assignments
+		int rows = students.size();			// Number of students
+		int cols = assignments.size() + 1;	// Number of assignments + name column
+		
+		// Initialize object array
+		Object[][] tableData = new Object[rows][cols];
+		
+		// Populate each cell of the table
+		for (int i = 0; i < rows; i++){
+			for (int j = 0; j < cols; j++){
+				
+				// TODO MAKE THIS WAY MORE EFFICIENT
+				// TODO ADD CHECKS
+				// Populate name column
+				if (j == 0){
+					Student student = students.get(i);
+					tableData[i][j] = student.getLname() + ", " + student.getFname();
+				} else {
+					Assignment assignment = assignments.get(j-1);
+					List<Grade> grades = assignment.getGrades();
+					Grade grade = grades.get(i);
+					tableData[i][j] = grade.getGrade();
+				}
+			}
+		}
+		
+		// Create the column names array
+		String columnNames[] = new String[cols];
+		columnNames[0] = "Names";
+		for (int i = 1, j = 0; i < cols; i++, j++){
+			columnNames[i] = assignmentList[j].replace(".txt", "");
+		}
+		
+		// Create the table and return it
+		DefaultTableModel table = new DefaultTableModel(tableData, columnNames);
+		return table;
+	}
+	
+	/*
+	 * Prepare the Course Selector JComboBox
+	 * 
+	 * This function populates the Course Selector Combo Box by pulling the 
+	 * course names from the current semester as specified by the user settings.
+	 *  
+	 */
+	public DefaultComboBoxModel<String> prepareCourseSelector(){
+		// Prepare Course Selector Box
+		Semester semester = new Semester(currentSemester.getSemesterName(), Constants.directory);
+		String[] courseNames = semester.getCourses();
+		dcbm = new DefaultComboBoxModel<String>(courseNames);
+		return dcbm;
 	}
 	
 	// Code to create tabbed section
