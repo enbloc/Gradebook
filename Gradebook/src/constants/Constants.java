@@ -13,5 +13,6 @@ package constants;
 public class Constants {
 
 	// Temp directory path
-	public static String directory = "C:/Users/gabri/Desktop/gradebook/gmiller";
+	public static String directory;
+	public static String username;
 }

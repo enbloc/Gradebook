@@ -33,7 +33,7 @@ public class NewAssignmentWizardGUI {
 	
 	public NewAssignmentWizardGUI(String currentCourse, String currentSemester, String currentUser){
 		
-		mainPanel = new JPanel(new BorderLayout(5,5));
+		mainPanel = new JPanel(new BorderLayout());
 
 		// Set up for labels panel
         labels = new JPanel(new GridLayout(0,1,2,2));

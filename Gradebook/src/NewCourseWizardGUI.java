@@ -22,8 +22,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-
 import constants.Constants;
 import dbclasses.Semester;
 import dbclasses.User;
@@ -35,12 +33,12 @@ public class NewCourseWizardGUI {
 	private JPanel  mainPanel;
 	private JPanel  labels;
 	private JPanel  controls;
-	private JComboBox semesters;
 	private JTextField semesterField;
 	private JTextField courseField;
 	private ButtonGroup  bg;
 	private JRadioButton rbNew;
 	private JRadioButton rbExists;
+	private JComboBox<String> semesters;
 	
 	public NewCourseWizardGUI(){
 		
@@ -87,7 +85,8 @@ public class NewCourseWizardGUI {
 
         // Set up for controls panel
         controls = new JPanel(new GridLayout(0,1,2,5));
-        semesters = new JComboBox(semList);
+        semesters = new JComboBox<String>(semList);
+        semesters.setPrototypeDisplayValue("Data Structures");
         semesterField = new JTextField();
         courseField   = new JTextField();
         semesterField.setEditable(false);

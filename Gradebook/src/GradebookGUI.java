@@ -16,7 +16,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -37,6 +36,7 @@ import javax.swing.table.DefaultTableModel;
 import constants.Constants;
 import dbclasses.Assignment;
 import dbclasses.Course;
+import dbclasses.Database;
 import dbclasses.Grade;
 import dbclasses.Semester;
 import dbclasses.Student;
@@ -59,6 +59,7 @@ public class GradebookGUI extends JApplet {
 	private JButton				newAssignmentBtn;
 	private JButton				newCourseBtn;
 	private JComboBox<String> 	courseSelector;
+	private DefaultTableModel   tableModel;
 	private DefaultComboBoxModel<String> dcbm;
 	
 	// Temp Static Objects
@@ -67,13 +68,12 @@ public class GradebookGUI extends JApplet {
 	
 	// GUI Class Constructor
 	public GradebookGUI(){
+		//this.userName = userName;
 		prepareGUI();
 	}
 	
 	public static void main(String[] args) {
-		currentUser     = new User    ("gmiller",   Constants.directory);
-		currentSemester = new Semester("Fall 2016", Constants.directory);
-		GradebookGUI gg = new GradebookGUI();
+		new GradebookGUI();
 	}
 	
 	// Initialize the GUI elements
@@ -87,6 +87,18 @@ public class GradebookGUI extends JApplet {
 	            System.exit(0);
 	         }        
 	      });
+		
+		//Login Interface
+		mainFrame.setVisible(true);
+		new LoginGUI(mainFrame, false);
+		
+		// Create or verify user folder if it exists
+		String workingDir = System.getProperty("user.dir");
+		Constants.directory = workingDir + "/" + Constants.username; 
+		currentUser     = new User    (Constants.username, Constants.directory);
+		currentSemester = new Semester("Fall 2016",        Constants.directory);
+		Database db = new Database();
+		db.createOrVerifyUser();
 		
 		// Initialize the tabbed area
 		tabbedPane = new JTabbedPane();
@@ -119,7 +131,9 @@ public class GradebookGUI extends JApplet {
 		});
 		
 		// Prepare Course Selector Box
-		courseSelector = new JComboBox<String>(prepareCourseSelector());
+		dcbm = prepareCourseSelector();
+		courseSelector = new JComboBox<String>(dcbm);
+		courseSelector.setPrototypeDisplayValue("Computer Science II");
 		courseSelector.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) { 
 				DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
@@ -181,7 +195,16 @@ public class GradebookGUI extends JApplet {
 		mainFrame.setVisible(true);
 	}
 	
-	// Create the New Course Wizard
+	/*
+	 * New Course Wizard
+	 * 
+	 * This function runs when the "New Course" button is pressed. It first
+	 * creates the New Course Wizard window, then takes the user inputs and
+	 * creates a course in the directory. It then adds the new course to the
+	 * course selector combo box in the controls panel, and displays the new
+	 * course on the main page.
+	 * 
+	 */
 	public void createCourse(){
 		NewCourseWizardGUI newCourseWizard = new NewCourseWizardGUI();
 		String newCourse = newCourseWizard.getCourseName();
@@ -189,17 +212,25 @@ public class GradebookGUI extends JApplet {
 		courseSelector.setSelectedItem(newCourse);
 	}
 	
+	/*
+	 * Assignment Creation Function
+	 * 
+	 * This function runs when the "New Assignment" button is pressed. It first
+	 * runs the New Assignment Wizard, then takes the user inputs and creates 
+	 * the assignment.txt file in the "Assignments" folder for the course. It then
+	 * updates the current table with the new course.
+	 * 
+	 */
 	public void createAssignment(){
-		// TODO Create New Assignment Wizard
 		String currentCourse = courseSelector.getSelectedItem().toString();
 		NewAssignmentWizardGUI newAssignmentWizard 
 									= new NewAssignmentWizardGUI(currentCourse,
 																 currentSemester.getSemesterName(),
 																 currentUser.getUsername());
 		
-		DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
-		coursesTable.setModel(dataModel); 
-		dataModel.fireTableChanged(null);
+		prepareTable(courseSelector.getSelectedItem().toString());
+		coursesTable.setModel(tableModel); 
+		tableModel.fireTableChanged(null);
 	}
 	
 	/*
@@ -258,8 +289,8 @@ public class GradebookGUI extends JApplet {
 		}
 		
 		// Create the table and return it
-		DefaultTableModel table = new DefaultTableModel(tableData, columnNames);
-		return table;
+		tableModel = new DefaultTableModel(tableData, columnNames);
+		return tableModel;
 	}
 	
 	/*
@@ -273,8 +304,22 @@ public class GradebookGUI extends JApplet {
 		// Prepare Course Selector Box
 		Semester semester = new Semester(currentSemester.getSemesterName(), Constants.directory);
 		String[] courseNames = semester.getCourses();
-		dcbm = new DefaultComboBoxModel<String>(courseNames);
+		if (courseNames != null){
+			dcbm = new DefaultComboBoxModel<String>(courseNames);
+		} else {
+			dcbm = new DefaultComboBoxModel<String>();
+		}
 		return dcbm;
+	}
+	
+	/*
+	 * Update Student Grade
+	 * 
+	 * This function responds to the changing of a grade value in the Gradebook table.
+	 * 
+	 */
+	public void updateGrade(){
+		// TODO Create update grade function
 	}
 	
 	// Code to create tabbed section
