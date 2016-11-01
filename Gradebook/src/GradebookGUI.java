@@ -54,8 +54,12 @@ public class GradebookGUI extends JApplet {
 	private JPanel				settingsTab;
 	private JPanel 				coursesPanel1;
 	private JPanel 				coursesPanel2;
+	private JPanel 				archivePanel1;
+	private JPanel 				archivePanel2;
 	private JTable 				coursesTable;
+	private JTable				archiveTable;
 	private JScrollPane 		coursesTableContainer;
+	private JScrollPane			archiveTableContainer;
 	private JButton				newAssignmentBtn;
 	private JButton				newCourseBtn;
 	private JComboBox<String> 	courseSelector;
@@ -173,6 +177,37 @@ public class GradebookGUI extends JApplet {
 		/*
 		 * Archive Panel Setup
 		 */
+		archiveTab = new JPanel();
+		archiveTab.setLayout(new BoxLayout(archiveTab, BoxLayout.Y_AXIS));
+
+		// Prepare Course Selector Box
+		dcbm = prepareCourseSelector();
+		courseSelector = new JComboBox<String>(dcbm);
+		courseSelector.setPrototypeDisplayValue("Computer Science II");
+		courseSelector.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
+				archiveTable.setModel(dataModel);
+				dataModel.fireTableChanged(null);
+			}
+		});
+
+		// Add Buttons to Control Panel
+		archivePanel1.add(courseSelector);
+		archivePanel1.setBorder(coursesControlTitle);
+		archivePanel1.setMaximumSize(archivePanel1,getPreferredSize());
+
+		// Archive Table Panel
+		archivePanel2 = new JPanel();
+		archivePanel2.setLayout(new GridLayout(1,1));
+		archiveTable  = new JTable();
+		archiveTableContainer = new JScrollPane(archiveTable);
+		archivePanel2.add(archiveTableContainer);
+		archivePanel2.setBorder(courseTableTitle);
+
+		// Initialize Archive Tab
+		archiveTab.add(archivePanel1);
+		archiveTab.add(archivePanel2);
 		archiveTab = (JPanel) makeTextPanel("Archive Panel");
 		tabbedPane.addTab("Archive", null, archiveTab, "Tooltip for the Archive Panel");
 		tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
