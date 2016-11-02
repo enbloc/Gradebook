@@ -96,6 +96,7 @@ public class GradebookGUI extends JApplet {
 		String workingDir = System.getProperty("user.dir");
 		Constants.directory = workingDir + "/" + Constants.username; 
 		currentUser     = new User    (Constants.username, Constants.directory);
+		System.out.println("AFTER INIT Username: " + Constants.username + "   Directory: " + Constants.directory);
 		currentSemester = new Semester("Fall 2016",        Constants.directory);
 		Database db = new Database();
 		db.createOrVerifyUser();
@@ -207,9 +208,11 @@ public class GradebookGUI extends JApplet {
 	 */
 	public void createCourse(){
 		NewCourseWizardGUI newCourseWizard = new NewCourseWizardGUI();
-		String newCourse = newCourseWizard.getCourseName();
-		dcbm.addElement(newCourse);
-		courseSelector.setSelectedItem(newCourse);
+		if (newCourseWizard.COURSE_CREATED == 1){
+			String newCourse = newCourseWizard.getCourseName();
+			dcbm.addElement(newCourse);
+			courseSelector.setSelectedItem(newCourse);
+		}
 	}
 	
 	/*
@@ -224,8 +227,8 @@ public class GradebookGUI extends JApplet {
 	public void createAssignment(){
 		String currentCourse = courseSelector.getSelectedItem().toString();
 		NewAssignmentWizardGUI newAssignmentWizard 
-									= new NewAssignmentWizardGUI(currentCourse,
-																 currentSemester.getSemesterName(),
+									= new NewAssignmentWizardGUI(currentSemester.getSemesterName(),
+																 currentCourse,
 																 currentUser.getUsername());
 		
 		prepareTable(courseSelector.getSelectedItem().toString());
@@ -251,9 +254,10 @@ public class GradebookGUI extends JApplet {
 								    currentSemester.getFolder());
 		
 		// Get students list and assignments list
-		List<Student>    students       = course.getStudents();
-		List<Assignment> assignments    = course.getAllAssignments();
-		String[]         assignmentList = course.getAssignmentList();
+		Database         db             = new Database();
+		List<Student>    students       = db.getStudents	  (currentSemester.getSemesterName(), courseName);
+		List<Assignment> assignments    = db.getAllAssignments(currentSemester.getSemesterName(), courseName);
+		String[]         assignmentList = db.getAssignmentList(currentSemester.getSemesterName(), courseName);
 		
 		// Initialize data array with number of students and assignments
 		int rows = students.size();			// Number of students
@@ -302,8 +306,10 @@ public class GradebookGUI extends JApplet {
 	 */
 	public DefaultComboBoxModel<String> prepareCourseSelector(){
 		// Prepare Course Selector Box
-		Semester semester = new Semester(currentSemester.getSemesterName(), Constants.directory);
-		String[] courseNames = semester.getCourses();
+		Database db = new Database();
+		String[] courseNames = db.getCourses(currentSemester.getSemesterName());
+		//Semester semester = new Semester(currentSemester.getSemesterName(), Constants.directory);
+		//String[] courseNames = semester.getCourses();
 		if (courseNames != null){
 			dcbm = new DefaultComboBoxModel<String>(courseNames);
 		} else {

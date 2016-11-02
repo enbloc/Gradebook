@@ -22,24 +22,6 @@ public class User {
 		this.username = username;
 		this.folder   = folder;
 	}
-	
-	// Create a new semester under the user directory
-	public Semester addSemester(String semesterName){
-		Semester semester = new Semester(semesterName, this.folder);
-		semester.createDirectory();
-		return semester;
-	}
-	
-	public void deleteSemester(String semesterName){
-		// TODO Delete semester directories
-	}
-	
-	// Get list of semesters under the user directory
-	public String[] getSemesters(){
-		File file = new File(this.folder);
-		semesters = file.list();
-		return semesters;
-	}
 
 	/*
 	 * Getters and Setters

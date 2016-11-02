@@ -23,6 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import constants.Constants;
+import dbclasses.Database;
 import dbclasses.Semester;
 import dbclasses.User;
 
@@ -40,13 +41,18 @@ public class NewCourseWizardGUI {
 	private JRadioButton rbExists;
 	private JComboBox<String> semesters;
 	
+	// Variable to keep track of whether or not course was created
+	public int COURSE_CREATED = 0;  // 0 == no course created, 1 == course created
+	
 	public NewCourseWizardGUI(){
 		
 		mainPanel = new JPanel(new BorderLayout(5,5));
 
 		// Get the existing semesters for the JComboBox
-		User user = new User("gmiller", Constants.directory);
-		String[] semList = user.getSemesters();
+		//User user = new User("gmiller", Constants.directory);
+		Database db = new Database();
+		String[] semList = db.getSemesters();
+		//String[] semList = user.getSemesters();
 		
 		// Set up for labels panel
         labels   = new JPanel(new GridLayout(0,1,2,5));
@@ -105,11 +111,18 @@ public class NewCourseWizardGUI {
 	    		  courseField.getText() != null	){
 	    		    newCourse = courseField.getText();
 	    			if (rbNew.isSelected()){
-	    				Semester newSemester = user.addSemester(semesterField.getText());
-	    				newSemester.addCourse(newCourse);
+	    				//Database db = new Database();
+	    				db.createSemesterFolder (semesterField.getText());
+	    				db.createCourseDirectory(semesterField.getText(), newCourse);
+	    				COURSE_CREATED = 1;
+	    				//Semester newSemester = user.addSemester(semesterField.getText());
+	    				//newSemester.addCourse(newCourse);
 	    			} else if (rbExists.isSelected()) {
-	    				Semester newSemester = user.addSemester(semesters.getSelectedItem().toString());
-	    				newSemester.addCourse(newCourse);
+	    				//Database db = new Database();
+	    				db.createCourseDirectory(semesters.getSelectedItem().toString(), newCourse);
+	    				COURSE_CREATED = 1;
+	    				//Semester newSemester = user.addSemester(semesters.getSelectedItem().toString());
+	    				//newSemester.addCourse(newCourse);
 	    			} else {
 	    				// TODO Error catch
 	    			}

@@ -22,29 +22,6 @@ public class Semester {
 		this.folder       = upFolder + "/" + semesterName;
 	}
 	
-	// Create the semester directory under the User folder
-	public void createDirectory(){
-		File d = new File(this.folder);
-		d.mkdirs();
-	}
-	
-	public Course addCourse(String courseName){
-		Course course = new Course(courseName, this.semesterName, this.folder);
-		course.createDirectory();
-		return course;
-	}
-	
-	public void deleteCourse(){
-		// TODO Delete directory with course name
-	}
-	
-	// Get all courses under the semester directory
-	public String[] getCourses(){
-		File file = new File(this.folder);
-		courses = file.list();
-		return courses;
-	}
-	
 	/*
 	 * Getters and Setters
 	 */

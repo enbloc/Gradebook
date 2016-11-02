@@ -21,6 +21,7 @@ import javax.swing.SwingConstants;
 
 import constants.Constants;
 import dbclasses.Course;
+import dbclasses.Database;
 
 public class NewAssignmentWizardGUI {
 
@@ -36,12 +37,12 @@ public class NewAssignmentWizardGUI {
 		mainPanel = new JPanel(new BorderLayout());
 
 		// Set up for labels panel
-        labels = new JPanel(new GridLayout(0,1,2,2));
+        labels = new JPanel(new GridLayout(0,1));
         labels.add(new JLabel("Assignment Name", SwingConstants.RIGHT));
         mainPanel.add(labels, BorderLayout.WEST);
 
         // Set up for controls panel
-        controls         = new JPanel(new GridLayout(0,1,2,2));
+        controls         = new JPanel(new GridLayout(0,1));
         assignmentField  = new JTextField();
         controls .add(assignmentField);
         mainPanel.add(controls, BorderLayout.CENTER);
@@ -53,9 +54,11 @@ public class NewAssignmentWizardGUI {
         // Handle assignment creation
 	    if (result == JOptionPane.OK_OPTION) {
 	    	if (assignmentField.getText() != null) {
-	    		String upFolder = Constants.directory + "/" + currentSemester; 
-	    		Course course   = new Course(currentCourse, currentSemester, upFolder);
-	    		course.addAssignment(assignmentField.getText());
+	    		//String upFolder = Constants.directory + "/" + currentSemester; 
+	    		Database db = new Database();
+	    		db.addAssignment(currentCourse, currentSemester, assignmentField.getText());
+	    		//Course course   = new Course(currentCourse, currentSemester, upFolder);
+	    		//course.addAssignment(assignmentField.getText());
 	    	} else {
 	    		// TODO Error message for empty input field
 	    	}

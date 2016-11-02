@@ -43,6 +43,9 @@ public class Database {
 
 	private String userDirectory;
 	
+	public Database(){
+		this.userDirectory = Constants.directory;
+	}
 	/*
 	 * User Methods
 	 */
@@ -70,10 +73,9 @@ public class Database {
 	 */
 	
 	// Create a new semester under the user directory
-	public Semester addSemester(String semesterName){
-		Semester semester = new Semester(semesterName, this.userDirectory);
-		semester.createDirectory();
-		return semester;
+	public void createSemesterFolder(String semester){
+		File d = new File(Constants.directory + "/" + semester);
+		d.mkdirs();
 	}
 	
 	public void deleteSemester(String semesterName){
@@ -82,7 +84,7 @@ public class Database {
 	
 	// Get list of semesters under the user directory
 	public String[] getSemesters(){
-		File file = new File(this.userDirectory);
+		File file = new File(Constants.directory);
 		String semesters[] = file.list();
 		return semesters;
 	}
@@ -103,13 +105,6 @@ public class Database {
 		createStudentsList(semester, course);
 		createRubric(semester, course);
 		createAssignmentFolder(semester, course);
-	}
-	
-	// Add a course to the specified semester folder
-	public Course addCourse(String semesterName, String courseName){
-		Course course = new Course(courseName, semesterName, this.userDirectory);
-		course.createDirectory();
-		return course;
 	}
 	
 	public void deleteCourse(){
@@ -168,10 +163,12 @@ public class Database {
 			// TODO Error catch
 			e.printStackTrace();
 		}
-		for (String line : lines){
-			String[] info = line.split(":");
-			Student student = new Student(info[0], info[1], info[2], null);
-			students.add(student);
+		if (lines != null){
+			for (String line : lines){
+				String[] info = line.split(":");
+				Student student = new Student(info[0], info[1], info[2], null);
+				students.add(student);
+			}
 		}
 		return students;
 	}
@@ -194,6 +191,11 @@ public class Database {
 		
 		// First, create the assignment text file
 		File assignment = new File(this.userDirectory + 
+								   "/" + semester + 
+								   "/" + course + 
+								   "/assignments/" + 
+								   assignmentName + ".txt");
+		System.out.println(this.userDirectory + 
 								   "/" + semester + 
 								   "/" + course + 
 								   "/assignments/" + 
