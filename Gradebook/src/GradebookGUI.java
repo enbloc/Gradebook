@@ -42,6 +42,10 @@ import dbclasses.Semester;
 import dbclasses.Student;
 import dbclasses.User;
 
+import com.jcabi.ssh.Shell;
+import com.jcabi.ssh.SSH;
+import com.jcabi.ssh.SSHByPassword;
+
 public class GradebookGUI extends JApplet {
 
 	// Class Variables

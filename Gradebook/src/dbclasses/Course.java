@@ -9,16 +9,6 @@
  */
 package dbclasses;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Course {
 
 	private String   courseName;
@@ -31,5 +21,49 @@ public class Course {
 		this.courseName   = courseName;
 		this.semesterName = semesterName;
 		this.folder       = upFolder + "/" + courseName;
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	
+	public String getCourseName() {
+		return courseName;
+	}
+
+	public void setCourseName(String courseName) {
+		this.courseName = courseName;
+	}
+
+	public String getSemesterName() {
+		return semesterName;
+	}
+
+	public void setSemesterName(String semesterName) {
+		this.semesterName = semesterName;
+	}
+
+	public String getFolder() {
+		return folder;
+	}
+
+	public void setFolder(String folder) {
+		this.folder = folder;
+	}
+
+	public String[] getStudents() {
+		return students;
+	}
+
+	public void setStudents(String[] students) {
+		this.students = students;
+	}
+
+	public String[] getAssignments() {
+		return assignments;
+	}
+
+	public void setAssignments(String[] assignments) {
+		this.assignments = assignments;
 	}
 }

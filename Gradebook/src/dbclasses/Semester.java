@@ -9,8 +9,6 @@
  */
 package dbclasses;
 
-import java.io.File;
-
 public class Semester {
 
 	private String   semesterName;
@@ -40,4 +38,14 @@ public class Semester {
 	public void setFolder(String folder) {
 		this.folder = folder;
 	}
+
+	public String[] getCourses() {
+		return courses;
+	}
+
+	public void setCourses(String[] courses) {
+		this.courses = courses;
+	}
+	
+	
 }

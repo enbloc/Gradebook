@@ -12,7 +12,9 @@ package constants;
 
 public class Constants {
 
-	// Temp directory path
-	public static String directory;
-	public static String username;
+	// Global Static Constants
+	public static String domain;		// Contains the Storm server domain address
+	public static String directory;		// Contains the root working directory on Storm
+	public static String username;		// Contains the username for logging into Storm via SSH
+	public static String password;		// Contains the passwork for logging into Storm via SSH
 }

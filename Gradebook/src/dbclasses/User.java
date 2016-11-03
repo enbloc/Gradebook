@@ -10,8 +10,6 @@
  */
 package dbclasses;
 
-import java.io.File;
-
 public class User {
 	
 	private String   username;
@@ -26,6 +24,7 @@ public class User {
 	/*
 	 * Getters and Setters
 	 */
+	
 	public String getUsername() {
 		return username;
 	}
@@ -42,9 +41,11 @@ public class User {
 		this.folder = folder;
 	}
 
+	public String[] getSemesters() {
+		return semesters;
+	}
+
 	public void setSemesters(String[] semesters) {
 		this.semesters = semesters;
 	}
-	
-	
 }
