@@ -94,7 +94,9 @@ public class GradebookGUI extends JApplet {
 		
 		//Login Interface
 		mainFrame.setVisible(true);
-		new LoginGUI(mainFrame, false);
+		new LoginGUI(mainFrame, false, false);
+		
+		
 		
 		// Create or verify user folder if it exists
 		String workingDir = System.getProperty("user.dir");
@@ -331,6 +333,7 @@ public class GradebookGUI extends JApplet {
 	public void updateGrade(){
 		// TODO Create update grade function
 	}
+	
 	
 	// Code to create tabbed section
 	protected Component makeTextPanel(String text) {

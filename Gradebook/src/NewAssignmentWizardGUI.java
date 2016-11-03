@@ -19,8 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import constants.Constants;
-import dbclasses.Course;
 import dbclasses.Database;
 
 public class NewAssignmentWizardGUI {
@@ -54,11 +52,8 @@ public class NewAssignmentWizardGUI {
         // Handle assignment creation
 	    if (result == JOptionPane.OK_OPTION) {
 	    	if (assignmentField.getText() != null) {
-	    		//String upFolder = Constants.directory + "/" + currentSemester; 
 	    		Database db = new Database();
 	    		db.addAssignment(currentCourse, currentSemester, assignmentField.getText());
-	    		//Course course   = new Course(currentCourse, currentSemester, upFolder);
-	    		//course.addAssignment(assignmentField.getText());
 	    	} else {
 	    		// TODO Error message for empty input field
 	    	}
