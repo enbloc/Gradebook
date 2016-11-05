@@ -16,6 +16,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -35,7 +36,6 @@ import javax.swing.table.DefaultTableModel;
 
 import constants.Constants;
 import dbclasses.Assignment;
-import dbclasses.Course;
 import dbclasses.Database;
 import dbclasses.Grade;
 import dbclasses.Semester;
@@ -43,9 +43,8 @@ import dbclasses.Student;
 import dbclasses.User;
 
 import com.jcabi.ssh.Shell;
-import com.jcabi.ssh.SSH;
-import com.jcabi.ssh.SSHByPassword;
 
+@SuppressWarnings("serial")
 public class GradebookGUI extends JApplet {
 
 	// Class Variables
@@ -96,16 +95,18 @@ public class GradebookGUI extends JApplet {
 		mainFrame.setVisible(true);
 		new LoginGUI(mainFrame, false, false);
 		
+		// Get the working directory from server
+		try {
+			String workingDir = new Shell.Plain(Constants.shell).exec("pwd");
+			Constants.directory = workingDir.trim() + "/Gradebook";
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
-		
-		// Create or verify user folder if it exists
-		String workingDir = System.getProperty("user.dir");
-		Constants.directory = workingDir + "/" + Constants.username; 
-		currentUser     = new User    (Constants.username, Constants.directory);
-		System.out.println("AFTER INIT Username: " + Constants.username + "   Directory: " + Constants.directory);
-		currentSemester = new Semester("Fall 2016",        Constants.directory);
-		Database db = new Database();
-		db.createOrVerifyUser();
+		// Set global constants
+		currentUser     = new User(Constants.username, Constants.directory);
+		currentSemester = new Semester("Fall 2016",    Constants.directory);
 		
 		// Initialize the tabbed area
 		tabbedPane = new JTabbedPane();
@@ -255,9 +256,6 @@ public class GradebookGUI extends JApplet {
 	 * those values into the data array.
 	 */
 	public DefaultTableModel prepareTable(String courseName){
-		Course course = new Course( courseName, 
-								    currentSemester.getSemesterName(),
-								    currentSemester.getFolder());
 		
 		// Get students list and assignments list
 		Database         db             = new Database();
@@ -314,8 +312,7 @@ public class GradebookGUI extends JApplet {
 		// Prepare Course Selector Box
 		Database db = new Database();
 		String[] courseNames = db.getCourses(currentSemester.getSemesterName());
-		//Semester semester = new Semester(currentSemester.getSemesterName(), Constants.directory);
-		//String[] courseNames = semester.getCourses();
+		
 		if (courseNames != null){
 			dcbm = new DefaultComboBoxModel<String>(courseNames);
 		} else {

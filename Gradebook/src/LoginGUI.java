@@ -23,7 +23,6 @@ import javax.swing.SwingConstants;
 
 import constants.Constants;
 
-import com.jcabi.ssh.Shell;
 import com.jcabi.ssh.SSHByPassword;
 
 public class LoginGUI {
@@ -103,11 +102,11 @@ public class LoginGUI {
     	boolean LOGGED_IN = false;
     	
     	try {
-			Shell shell = new SSHByPassword(Constants.domain,
+			Constants.shell = new SSHByPassword(Constants.domain,
 											Constants.portNo,
 											Constants.username,
 											Constants.password);
-			shell.exec("mkdir Gradebook", null, null, null);
+			Constants.shell.exec("mkdir Gradebook", null, null, null);
 			LOGGED_IN = true;
 		} catch (UnknownHostException e) {
 			// Unknown Host

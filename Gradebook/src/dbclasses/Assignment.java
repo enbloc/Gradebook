@@ -9,11 +9,6 @@
  */
 package dbclasses;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Assignment {
@@ -22,28 +17,36 @@ public class Assignment {
 	private String      name;
 	private List<Grade> grades;
 	
-	public Assignment(String name, String folder){
+	public Assignment(String name, List<Grade> grades){
 		this.name   = name;
+		this.grades = grades;
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	
+	public String getFolder() {
+		return folder;
+	}
+
+	public void setFolder(String folder) {
 		this.folder = folder;
 	}
-	
-	// Retrieve all of the student ID/grade pairs from the .txt file
-	public List<Grade> getGrades(){
-		List<String> lines = new ArrayList<String>();
-		this.grades = new ArrayList<Grade>();
-		
-		try {
-			lines = Files.readAllLines(Paths.get(this.folder + "/" + name), Charset.forName("Cp1252"));
-		} catch (IOException e) {
-			// TODO Error catch
-			e.printStackTrace();
-		}
-		for (String line : lines){
-			String[] info = line.split(":");
-			Grade grade = new Grade(info[0], info[1]);
-			grades.add(grade);
-		}
-		
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public List<Grade> getGrades() {
 		return grades;
 	}
+
+	public void setGrades(List<Grade> grades) {
+		this.grades = grades;
+	}	
 }

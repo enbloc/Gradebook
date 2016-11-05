@@ -10,6 +10,8 @@
 
 package constants;
 
+import com.jcabi.ssh.Shell;
+
 public class Constants {
 
 	// Global Static Constants
@@ -18,4 +20,5 @@ public class Constants {
 	public static String password;								// Contains the passwork for logging into Storm via SSH
 	public static String domain = "storm.cis.fordham.edu";		// Contains the Storm server domain address
 	public static int    portNo = 22;							// Standard port number for SSH login
+	public static Shell  shell;									// SSH shell that is used to execute commands on server
 }

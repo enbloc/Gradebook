@@ -106,11 +106,11 @@ public class NewCourseWizardGUI {
 	    		  courseField.getText() != null	){
 	    		    newCourse = courseField.getText();
 	    			if (rbNew.isSelected()){
-	    				db.createSemesterFolder (semesterField.getText());
-	    				db.createCourseDirectory(semesterField.getText(), newCourse);
+	    				db.createSemesterFolder(semesterField.getText());
+	    				db.createCourseFolder  (semesterField.getText(), newCourse);
 	    				COURSE_CREATED = 1;
 	    			} else if (rbExists.isSelected()) {
-	    				db.createCourseDirectory(semesters.getSelectedItem().toString(), newCourse);
+	    				db.createCourseFolder(semesters.getSelectedItem().toString(), newCourse);
 	    				COURSE_CREATED = 1;
 	    			} else {
 	    				// TODO Error catch
