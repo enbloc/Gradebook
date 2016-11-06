@@ -315,7 +315,43 @@ public class GradebookGUI extends JApplet {
 		// Create the table and return it
 		tableModel = new DefaultTableModel(tableData, columnNames);
 		
+		// Calculate averages and add to table
+		Object[] column = getRowAverages(tableModel);
+		tableModel.addColumn("Average", column);
+		Object[] row = getColumnAverages(tableModel);
+		tableModel.addRow(row);
+		
 		return tableModel;
+	}
+	
+	/*
+	 * Get Row Averages
+	 * 
+	 * Get the student average for each assignment based on the grades entered and 
+	 * instantiate a column object containing the values to be placed at the right
+	 * of the table.
+	 * 
+	 */
+	public Object[] getRowAverages(DefaultTableModel model){
+		int items = 0;
+		int sum   = 0;
+		
+		// Initialize row object and set title value
+		Object[] column = new Object[model.getRowCount()];
+		
+		for (int j = 0; j < model.getRowCount(); j++) {
+			for (int i = 2; i < model.getColumnCount(); i++) {
+				if ((String) model.getValueAt(j, i) != " "){
+					sum += Integer.parseInt((String) model.getValueAt(j, i));
+					items += 1;
+				}
+			}
+			// Perform calculation
+			column[j] = sum/items;
+			sum = 0;
+			items = 0;
+		}
+		return column;	
 	}
 	
 	/*
@@ -326,13 +362,28 @@ public class GradebookGUI extends JApplet {
 	 * of the table.
 	 * 
 	 */
-	public Object[] getColumnAverages(DefaultTableModel dtm){
+	public Object[] getColumnAverages(DefaultTableModel model){
 		int items = 0;
 		int sum   = 0;
 		
+		// Initialize row object and set title value
+		Object[] row = new Object[model.getColumnCount()];
+		row[0] = " ";
+		row[1] = "AVERAGE:";
 		
-		
-		return null;	
+		for (int i = 2; i < model.getColumnCount(); i++) {
+			for (int j = 0; j < model.getRowCount(); j++) {
+				if (model.getValueAt(j, i).toString() != " "){
+					sum += Integer.parseInt(model.getValueAt(j, i).toString());
+					items += 1;
+				}
+			}
+			// Perform calculation
+			row[i] = sum/items;
+			sum = 0;
+			items = 0;
+		}
+		return row;	
 	}
 	
 	/*
