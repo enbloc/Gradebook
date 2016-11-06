@@ -17,6 +17,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -35,9 +36,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import constants.Constants;
-import dbclasses.Assignment;
 import dbclasses.Database;
-import dbclasses.Grade;
 import dbclasses.Semester;
 import dbclasses.Student;
 import dbclasses.User;
@@ -248,57 +247,92 @@ public class GradebookGUI extends JApplet {
 	 * 
 	 * Retrieve and initialize the values for the Gradebook table.
 	 * 
-	 * These values are retrieved by first querying the students.txt file to
-	 * get the list of students in the class, as well as the list of assignments
-	 * in the assignments folder, to get the dimensions for the data array so that
-	 * the array can be initialized. The array can then be populated iteratively by
-	 * mapping the student IDs to the IDs in each assignment text file and plugging 
-	 * those values into the data array.
+	 * These values are retrieved by querying the "assignments" file in the database
+	 * directory (which contains student names, ID numbers, and grades) and parsing the 
+	 * raw data in the function interatively. These values, as well as the values pulled 
+	 * from the "assignments_list" file (which contains a list of the assignment names) 
+	 * are then mapped to the DefaultTableModel which can then be applied to the JTable.
+	 * 
 	 */
-	public DefaultTableModel prepareTable(String courseName){
+	public DefaultTableModel prepareTable(String course){
 		
-		// Get students list and assignments list
-		Database         db             = new Database();
-		List<Student>    students       = db.getStudents	  (currentSemester.getSemesterName(), courseName);
-		List<Assignment> assignments    = db.getAllAssignments(currentSemester.getSemesterName(), courseName);
-		String[]         assignmentList = db.getAssignmentList(currentSemester.getSemesterName(), courseName);
+		// Get course data
+		Database db 		 = new Database();
+		String[] courseData  = db.getCourseData		(currentSemester.getSemesterName(), course);
+		String[] assignments = db.getAssignmentList (currentSemester.getSemesterName(), course);
+		List<Student> students = new ArrayList<Student>();
 		
 		// Initialize data array with number of students and assignments
-		int rows = students.size();			// Number of students
-		int cols = assignments.size() + 1;	// Number of assignments + name column
+		int rows = courseData .length;		// Number of students
+		int cols = assignments.length + 2;	// Number of assignments + id column + name column
 		
 		// Initialize object array
 		Object[][] tableData = new Object[rows][cols];
 		
+		// Parse courseData into student names and grades
+		for (String studentData : courseData){
+			String[] studentInfo = studentData.split(":");
+			Student student = new Student(studentInfo[0],
+										  studentInfo[1],
+										  studentInfo[2],
+										  null);
+			
+			List<String> grades = new ArrayList<String>();
+			for (int i = 3; i < studentInfo.length; i++){
+				grades.add(studentInfo[i]);
+			}
+			student.setGrades(grades);
+			students.add(student);
+		}
+		
 		// Populate each cell of the table
-		for (int i = 0; i < rows; i++){
-			for (int j = 0; j < cols; j++){
+		for (int j = 0; j < cols; j++){
+			for (int i = 0; i < rows; i++){
 				
-				// TODO MAKE THIS WAY MORE EFFICIENT
-				// TODO ADD CHECKS
-				// Populate name column
+				// Get the student for the current row
+				Student student = students.get(i);
+				
+				// Populate columns
 				if (j == 0){
-					Student student = students.get(i);
+					tableData[i][j] = student.getId();
+				} else if (j == 1){
 					tableData[i][j] = student.getLname() + ", " + student.getFname();
 				} else {
-					Assignment assignment = assignments.get(j-1);
-					List<Grade> grades = assignment.getGrades();
-					Grade grade = grades.get(i);
-					tableData[i][j] = grade.getGrade();
+					List<String> grades = student.getGrades();
+					tableData[i][j] = grades.get(j-2);
 				}
 			}
 		}
 		
 		// Create the column names array
 		String columnNames[] = new String[cols];
-		columnNames[0] = "Names";
-		for (int i = 1, j = 0; i < cols; i++, j++){
-			columnNames[i] = assignmentList[j].replace(".txt", "");
+		columnNames[0] = "ID";
+		columnNames[1] = "Name";
+		for (int i = 2, j = 0; i < cols; i++, j++){
+			columnNames[i] = assignments[j].replace("_", " ");
 		}
 		
 		// Create the table and return it
 		tableModel = new DefaultTableModel(tableData, columnNames);
+		
 		return tableModel;
+	}
+	
+	/*
+	 * Get Column Averages
+	 * 
+	 * Get the class average for each assignment based on the grades entered and 
+	 * instantiate a row object containing the values to be placed at the bottom
+	 * of the table.
+	 * 
+	 */
+	public Object[] getColumnAverages(DefaultTableModel dtm){
+		int items = 0;
+		int sum   = 0;
+		
+		
+		
+		return null;	
 	}
 	
 	/*

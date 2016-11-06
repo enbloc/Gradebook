@@ -9,12 +9,15 @@
  */
 package dbclasses;
 
+import java.util.List;
+
 public class Student {
 
 	private String id;
 	private String fname;
 	private String lname;
 	private String mi;
+	private List<String> grades;
 	
 	public Student (String id, String fname, String lname, String mi) {
 		this.id    = id;
@@ -58,4 +61,14 @@ public class Student {
 	public void setMi(String mi) {
 		this.mi = mi;
 	}
+
+	public List<String> getGrades() {
+		return grades;
+	}
+
+	public void setGrades(List<String> grades) {
+		this.grades = grades;
+	}
+	
+	
 }
