@@ -85,6 +85,8 @@ public class LoginGUI {
 	    			new LoginGUI(frame, false, true);
 	    		}
 	    	}
+	    } else {
+	    	System.exit(0);
 	    }
     }
     

@@ -33,13 +33,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 import constants.Constants;
+import dbclasses.Assignment;
 import dbclasses.Database;
-import dbclasses.Semester;
+import dbclasses.GradeCategory;
 import dbclasses.Student;
-import dbclasses.User;
 
 import com.jcabi.ssh.Shell;
 
@@ -54,8 +56,9 @@ public class GradebookGUI extends JApplet {
 	private JPanel 				archiveTab;
 	private JPanel 				statisticsTab;
 	private JPanel				settingsTab;
-	private JPanel 				coursesPanel1;
-	private JPanel 				coursesPanel2;
+	private JPanel 				coursesControlPanel;
+	private JPanel				coursesRubricPanel;
+	private JPanel 				coursesTablePanel;
 	private JTable 				coursesTable;
 	private JScrollPane 		coursesTableContainer;
 	private JButton				newAssignmentBtn;
@@ -64,13 +67,8 @@ public class GradebookGUI extends JApplet {
 	private DefaultTableModel   tableModel;
 	private DefaultComboBoxModel<String> dcbm;
 	
-	// Temp Static Objects
-	private static User 	currentUser;
-	private static Semester currentSemester;
-	
 	// GUI Class Constructor
 	public GradebookGUI(){
-		//this.userName = userName;
 		prepareGUI();
 	}
 	
@@ -103,16 +101,13 @@ public class GradebookGUI extends JApplet {
 			e1.printStackTrace();
 		}
 		
-		// Set global constants
-		currentUser     = new User(Constants.username, Constants.directory);
-		currentSemester = new Semester("Fall 2016",    Constants.directory);
-		
 		// Initialize the tabbed area
 		tabbedPane = new JTabbedPane();
 		
 		// Initialize the border titles
-		TitledBorder coursesControlTitle, coursesTableTitle;
+		TitledBorder coursesControlTitle, coursesRubricTitle, coursesTableTitle;
 		coursesControlTitle = BorderFactory.createTitledBorder("Controls");
+		coursesRubricTitle  = BorderFactory.createTitledBorder("Rubric");
 		coursesTableTitle   = BorderFactory.createTitledBorder("Gradebook");
 		
 		/*
@@ -122,8 +117,8 @@ public class GradebookGUI extends JApplet {
 		coursesTab.setLayout(new BoxLayout(coursesTab, BoxLayout.Y_AXIS));
 		
 		// Course Control Panel
-		coursesPanel1 	 = new JPanel();
-		coursesPanel1.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
+		coursesControlPanel 	 = new JPanel();
+		coursesControlPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
 		newAssignmentBtn = new JButton("New Assignment");
 		newAssignmentBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) { 
@@ -134,7 +129,7 @@ public class GradebookGUI extends JApplet {
 		newCourseBtn.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) { 
 			    createCourse();
-			  } 
+			  }
 		});
 		
 		// Prepare Course Selector Box
@@ -143,31 +138,53 @@ public class GradebookGUI extends JApplet {
 		courseSelector.setPrototypeDisplayValue("Computer Science II");
 		courseSelector.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) { 
-				DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
-				coursesTable.setModel(dataModel); 
-				dataModel.fireTableChanged(null);
+				System.out.println("e.getID() == " + e.getID());
+				if (e.getID() == 1001){
+					DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
+					coursesTable.setModel(dataModel); 
+					//dataModel.fireTableChanged(null);
+				}
 			  } 
 		});
 
 		// Add Buttons to control panel
-		coursesPanel1.add(courseSelector);
-		coursesPanel1.add(newAssignmentBtn);
-		coursesPanel1.add(newCourseBtn);
-		coursesPanel1.setBorder(coursesControlTitle);
-		coursesPanel1.setMaximumSize(coursesPanel1.getPreferredSize());
+		coursesControlPanel.add(courseSelector);
+		coursesControlPanel.add(newAssignmentBtn);
+		coursesControlPanel.add(newCourseBtn);
+		coursesControlPanel.setBorder(coursesControlTitle);
+		
+		// Course Rubric Panel
+		coursesRubricPanel = new JPanel();
+		coursesRubricPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
+		coursesRubricPanel.add(new JLabel("Homework = 35%"));
+		coursesRubricPanel.add(new JLabel("Quiz = 20%"));
+		coursesRubricPanel.add(new JLabel("Exam = 45%"));
+		coursesRubricPanel.setBorder(coursesRubricTitle);
+		
+		// Combined Control/Rubric Panel
+		JPanel combinedControlPanel = new JPanel();
+		combinedControlPanel.setLayout(new GridLayout(0,2));
+		combinedControlPanel.add(coursesControlPanel);
+		combinedControlPanel.add(coursesRubricPanel);
+		JPanel combinedControlPanelWrapper = new JPanel(new FlowLayout());
+		combinedControlPanelWrapper.add(combinedControlPanel);
 		
 		// Course Table Panel
-		coursesPanel2 = new JPanel();
-		coursesPanel2.setLayout(new GridLayout(1,1));
+		coursesTablePanel = new JPanel();
+		coursesTablePanel.setLayout(new GridLayout(1,1));
 		coursesTable  = new JTable();
 		coursesTableContainer = new JScrollPane(coursesTable);
-		coursesPanel2.add(coursesTableContainer);
-		coursesPanel2.setBorder(coursesTableTitle);
+		coursesTablePanel.add(coursesTableContainer);
+		coursesTablePanel.setBorder(coursesTableTitle);
+		
+		JPanel courseTabWrapper = new JPanel();
+		courseTabWrapper.setLayout(new FlowLayout());
 		
 		// Initialize Courses Tab
-		coursesTab.add(coursesPanel1);
-		coursesTab.add(coursesPanel2);
-		tabbedPane.addTab("Courses", null, coursesTab, "Tooltip for the Courses Panel");
+		coursesTab.add(combinedControlPanelWrapper);
+		coursesTab.add(coursesTablePanel);
+		courseTabWrapper.add(coursesTab);
+		tabbedPane.addTab("Courses", null, courseTabWrapper, "Tooltip for the Courses Panel");
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 		
 		/*
@@ -232,11 +249,9 @@ public class GradebookGUI extends JApplet {
 	 */
 	public void createAssignment(){
 		String currentCourse = courseSelector.getSelectedItem().toString();
-		NewAssignmentWizardGUI newAssignmentWizard 
-									= new NewAssignmentWizardGUI(currentSemester.getSemesterName(),
-																 currentCourse,
-																 currentUser.getUsername());
-		
+		new NewAssignmentWizardGUI(Constants.defaultSemester,
+		    					   currentCourse,
+		    					   Constants.username);
 		prepareTable(courseSelector.getSelectedItem().toString());
 		coursesTable.setModel(tableModel); 
 		tableModel.fireTableChanged(null);
@@ -257,14 +272,15 @@ public class GradebookGUI extends JApplet {
 	public DefaultTableModel prepareTable(String course){
 		
 		// Get course data
-		Database db 		 = new Database();
-		String[] courseData  = db.getCourseData		(currentSemester.getSemesterName(), course);
-		String[] assignments = db.getAssignmentList (currentSemester.getSemesterName(), course);
-		List<Student> students = new ArrayList<Student>();
+		Database db 		 		  = new Database();
+		String[] courseData  		  = db.getCourseData		(Constants.defaultSemester, course);
+		List<Assignment> assignments  = db.getAssignmentList    (Constants.defaultSemester, course);
+		List<GradeCategory> gw 		  = db.getRubric			(Constants.defaultSemester, course);
+		List<Student> students 	   	  = new ArrayList<Student>();
 		
 		// Initialize data array with number of students and assignments
 		int rows = courseData .length;		// Number of students
-		int cols = assignments.length + 2;	// Number of assignments + id column + name column
+		int cols = assignments.size() + 2;	// Number of assignments + id column + name column
 		
 		// Initialize object array
 		Object[][] tableData = new Object[rows][cols];
@@ -272,34 +288,38 @@ public class GradebookGUI extends JApplet {
 		// Parse courseData into student names and grades
 		for (String studentData : courseData){
 			String[] studentInfo = studentData.split(":");
-			Student student = new Student(studentInfo[0],
-										  studentInfo[1],
-										  studentInfo[2],
-										  null);
-			
-			List<String> grades = new ArrayList<String>();
-			for (int i = 3; i < studentInfo.length; i++){
-				grades.add(studentInfo[i]);
+			if (!studentInfo[0].isEmpty()){
+				Student student = new Student(studentInfo[0],
+											  studentInfo[1],
+											  studentInfo[2],
+											  null);
+				
+				List<String> grades = new ArrayList<String>();
+				for (int i = 3; i < studentInfo.length; i++){
+					grades.add(studentInfo[i]);
+				}
+				student.setGrades(grades);
+				students.add(student);
 			}
-			student.setGrades(grades);
-			students.add(student);
 		}
 		
 		// Populate each cell of the table
-		for (int j = 0; j < cols; j++){
-			for (int i = 0; i < rows; i++){
-				
-				// Get the student for the current row
-				Student student = students.get(i);
-				
-				// Populate columns
-				if (j == 0){
-					tableData[i][j] = student.getId();
-				} else if (j == 1){
-					tableData[i][j] = student.getLname() + ", " + student.getFname();
-				} else {
-					List<String> grades = student.getGrades();
-					tableData[i][j] = grades.get(j-2);
+		if (!students.isEmpty()){
+			for (int j = 0; j < cols; j++){
+				for (int i = 0; i < rows; i++){
+					
+					// Get the student for the current row
+					Student student = students.get(i);
+					
+					// Populate columns
+					if (j == 0){
+						tableData[i][j] = student.getId();
+					} else if (j == 1){
+						tableData[i][j] = student.getLname() + ", " + student.getFname();
+					} else {
+						List<String> grades = student.getGrades();
+						tableData[i][j] = grades.get(j-2);
+					}
 				}
 			}
 		}
@@ -308,18 +328,34 @@ public class GradebookGUI extends JApplet {
 		String columnNames[] = new String[cols];
 		columnNames[0] = "ID";
 		columnNames[1] = "Name";
-		for (int i = 2, j = 0; i < cols; i++, j++){
-			columnNames[i] = assignments[j].replace("_", " ");
+		if (!assignments.isEmpty()){
+			for (int i = 2; i < cols; i++){
+				columnNames[i] = assignments.get(i-2).getName().replace("_", " ");
+			}
 		}
 		
 		// Create the table and return it
 		tableModel = new DefaultTableModel(tableData, columnNames);
 		
 		// Calculate averages and add to table
-		Object[] column = getRowAverages(tableModel);
-		tableModel.addColumn("Average", column);
-		Object[] row = getColumnAverages(tableModel);
-		tableModel.addRow(row);
+		if (!students.isEmpty() || !assignments.isEmpty()){
+			Object[] column = getRowAverages(tableModel, gw, assignments, false);
+			tableModel.addColumn("Average", column);
+			Object[] row = getColumnAverages(tableModel, false);
+			tableModel.addRow(row);
+		}
+		
+		// Add a listener for changes in the values of the cells
+		tableModel.addTableModelListener(new TableModelListener() {
+
+		      public void tableChanged(TableModelEvent e) {
+		    	  if (e.getType() == TableModelEvent.UPDATE) {
+	                    tableModel.removeTableModelListener(this);
+	                    updateGrade(tableModel, e, gw, assignments, course);
+	                    tableModel.addTableModelListener(this);
+	              }
+		      }
+		    });
 		
 		return tableModel;
 	}
@@ -332,24 +368,76 @@ public class GradebookGUI extends JApplet {
 	 * of the table.
 	 * 
 	 */
-	public Object[] getRowAverages(DefaultTableModel model){
-		int items = 0;
-		int sum   = 0;
+	public Object[] getRowAverages(DefaultTableModel model, List<GradeCategory> gcs, List<Assignment> assignments, boolean IS_RECALC){
+		
+		// Counting variables
+		int rowCount 	   = 0;
+		int colCount 	   = 0;
+		double finalGrade  = 0;
+		double totalWeight = 0;
+		
+		// Initialize row and column counts depending on whether or not table is
+		// being built for the first time or is becing recalculated after update.
+		// This is to prevent the "Average" col/row from being used in recalculation.
+		if (IS_RECALC){
+			rowCount 	= model.getRowCount() - 1;
+			colCount = model.getColumnCount() - 1;
+		} else {
+			rowCount 	= model.getRowCount();
+			colCount = model.getColumnCount();
+		}
 		
 		// Initialize row object and set title value
-		Object[] column = new Object[model.getRowCount()];
+		Object[] column = new Object[rowCount];
 		
-		for (int j = 0; j < model.getRowCount(); j++) {
-			for (int i = 2; i < model.getColumnCount(); i++) {
+		for (int j = 0; j < rowCount; j++) {
+			System.out.println("ROW #" + j);
+			for (int i = 2; i < colCount; i++) {
+				System.out.println("COL #" + i);
 				if ((String) model.getValueAt(j, i) != " "){
-					sum += Integer.parseInt((String) model.getValueAt(j, i));
-					items += 1;
+					String columnName = model.getColumnName(i);
+					String categoryName = null;
+					for (Assignment a : assignments){
+						if (a.getName().replace("_", " ") == columnName){
+							System.out.println(a.getName() + " == " + columnName);
+							categoryName = a.getCategory();
+							break;
+						}
+					}
+					for (GradeCategory g : gcs){
+						if (categoryName.equals(g.getCategory())){
+							if (!model.getValueAt(j, i).equals(" ")){
+								int grade = Integer.parseInt((String) model.getValueAt(j, i));
+								g.addGrade(grade);
+								break;
+							}
+						}
+					}
 				}
 			}
 			// Perform calculation
-			column[j] = sum/items;
-			sum = 0;
-			items = 0;
+			for (GradeCategory g : gcs){
+				System.out.println("CALCULATION: ");
+				if (g.getGradeNumber() > 0){
+					System.out.println("Adding in category: " + g.getCategory());
+					System.out.println("TotalWeight == " + totalWeight);
+					totalWeight += g.getWeight();
+					System.out.println("TotalWeight += " + g.getWeight());
+					System.out.println("FinalGrade == " + finalGrade);
+					finalGrade +=  g.getWeightedAverage();
+				}
+			}
+			finalGrade = finalGrade * totalWeight;
+			System.out.println("Final Grade == " + finalGrade + " * " + totalWeight);
+			double total = Math.round(finalGrade * 100);
+			column[j] = total/100;
+			
+			// Clear all values
+			finalGrade  = 0;
+			totalWeight = 0;
+			for (GradeCategory g : gcs){
+				g.clearValues();
+			}
 		}
 		return column;	
 	}
@@ -362,24 +450,43 @@ public class GradebookGUI extends JApplet {
 	 * of the table.
 	 * 
 	 */
-	public Object[] getColumnAverages(DefaultTableModel model){
-		int items = 0;
-		int sum   = 0;
+	public Object[] getColumnAverages(DefaultTableModel model, boolean IS_RECALC){
+		
+		// Counting variables
+		int rowCount = 0;
+		int colCount = 0;
+		int items 	 = 0;
+		double sum   = 0;
+		
+		// Initialize row and column counts depending on whether or not table is
+		// being built for the first time or is becing recalculated after update.
+		// This is to prevent the "Average" col/row from being used in recalculation.
+		if (IS_RECALC){
+			rowCount = model.getRowCount() - 1;
+			colCount = model.getColumnCount();
+		} else {
+			rowCount = model.getRowCount();
+			colCount = model.getColumnCount();
+		}
 		
 		// Initialize row object and set title value
-		Object[] row = new Object[model.getColumnCount()];
+		Object[] row = new Object[colCount];
 		row[0] = " ";
 		row[1] = "AVERAGE:";
 		
-		for (int i = 2; i < model.getColumnCount(); i++) {
-			for (int j = 0; j < model.getRowCount(); j++) {
+		for (int i = 2; i < colCount; i++) {
+			for (int j = 0; j < rowCount; j++) {
 				if (model.getValueAt(j, i).toString() != " "){
-					sum += Integer.parseInt(model.getValueAt(j, i).toString());
-					items += 1;
+					if (!model.getValueAt(j, i).equals(" ")){
+						sum += Double.parseDouble(model.getValueAt(j, i).toString());
+						items += 1;
+					}
 				}
 			}
 			// Perform calculation
-			row[i] = sum/items;
+			double total = sum/items;
+			total = Math.round(total * 100);
+			row[i] = total/100;
 			sum = 0;
 			items = 0;
 		}
@@ -396,7 +503,7 @@ public class GradebookGUI extends JApplet {
 	public DefaultComboBoxModel<String> prepareCourseSelector(){
 		// Prepare Course Selector Box
 		Database db = new Database();
-		String[] courseNames = db.getCourses(currentSemester.getSemesterName());
+		String[] courseNames = db.getCourses(Constants.defaultSemester);
 		
 		if (courseNames != null){
 			dcbm = new DefaultComboBoxModel<String>(courseNames);
@@ -412,8 +519,33 @@ public class GradebookGUI extends JApplet {
 	 * This function responds to the changing of a grade value in the Gradebook table.
 	 * 
 	 */
-	public void updateGrade(){
-		// TODO Create update grade function
+	public void updateGrade(DefaultTableModel dtm, TableModelEvent e, List<GradeCategory> gcs, List<Assignment> assignments, String course){
+		System.out.println("Cell " + e.getFirstRow() + ", "
+                + e.getColumn() + " changed. The new value: "
+                + tableModel.getValueAt(e.getFirstRow(),
+                e.getColumn()));
+        String studentID = (String) tableModel.getValueAt(e.getFirstRow(), 0);
+        int fileColumn = e.getColumn() + 2; // Change to +3 when MI is added
+        String newGrade =  String.valueOf(tableModel.getValueAt(e.getFirstRow(), e.getColumn()));
+        Database db = new Database();
+        db.updateGrade(Constants.defaultSemester, 
+        			   course, 
+        			   studentID,
+        			   fileColumn,
+        			   newGrade);
+        int averagesColumn = dtm.findColumn("Average");
+        int classAveragesRow = dtm.getRowCount() - 1;
+        
+        Object[] column = getRowAverages(dtm, gcs, assignments, true);
+        for (int i = 0; i < dtm.getRowCount() - 1; i++){
+        	dtm.setValueAt(column[i], i, averagesColumn);
+        }
+        
+        Object[] row = getColumnAverages(dtm, true);
+        for (int j = 2; j < dtm.getColumnCount(); j++){
+        	dtm.setValueAt(row[j], classAveragesRow, j);
+        }
+        //dtm.fireTableDataChanged();
 	}
 	
 	

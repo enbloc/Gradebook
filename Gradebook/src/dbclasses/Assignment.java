@@ -9,30 +9,19 @@
  */
 package dbclasses;
 
-import java.util.List;
-
 public class Assignment {
 
-	private String		folder;
 	private String      name;
-	private List<Grade> grades;
+	private String		category;
 	
-	public Assignment(String name, List<Grade> grades){
+	public Assignment(String name, String category){
 		this.name   = name;
-		this.grades = grades;
+		this.category = category;
 	}
 
 	/*
 	 * Getters and Setters
 	 */
-	
-	public String getFolder() {
-		return folder;
-	}
-
-	public void setFolder(String folder) {
-		this.folder = folder;
-	}
 
 	public String getName() {
 		return name;
@@ -42,11 +31,13 @@ public class Assignment {
 		this.name = name;
 	}
 
-	public List<Grade> getGrades() {
-		return grades;
+	public String getCategory() {
+		return category;
 	}
 
-	public void setGrades(List<Grade> grades) {
-		this.grades = grades;
-	}	
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	
 }

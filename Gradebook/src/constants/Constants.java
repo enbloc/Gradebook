@@ -21,4 +21,5 @@ public class Constants {
 	public static String domain = "storm.cis.fordham.edu";		// Contains the Storm server domain address
 	public static int    portNo = 22;							// Standard port number for SSH login
 	public static Shell  shell;									// SSH shell that is used to execute commands on server
+	public static String defaultSemester = "Fall 2016";			// The default semester that is shown in the "Courses" tab
 }

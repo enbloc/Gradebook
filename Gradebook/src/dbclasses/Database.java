@@ -32,8 +32,16 @@ import java.util.List;
 import com.jcabi.ssh.Shell;
 
 import constants.Constants;
+import threads.GradeUpdateThread;
 
 public class Database {
+	
+	// Class to assist with directory/file path construction
+	DatabasePathBuilder PathBuilder;
+	
+	public Database(){
+		PathBuilder = new DatabasePathBuilder();
+	}
 	
 	/*
 	 * Semester Methods
@@ -41,8 +49,10 @@ public class Database {
 	
 	// Create a new semester under the user directory
 	public void createSemesterFolder(String semester){
+		
+		String semesterFolderPath = PathBuilder.buildPath(semester);
 		try {
-			new Shell.Plain(Constants.shell).exec("mkdir " + "/" + semester.replace(" ", "_"));
+			new Shell.Plain(Constants.shell).exec("mkdir " + semesterFolderPath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -51,8 +61,10 @@ public class Database {
 	
 	// Delete semester directory
 	public void deleteSemester(String semester){
+		
+		String semesterFolderPath = PathBuilder.buildPath(semester);
 		try {
-			new Shell.Plain(Constants.shell).exec("rm -rf " + Constants.directory + "/" + semester.replace(" ", "_"));
+			new Shell.Plain(Constants.shell).exec("rm -rf " + semesterFolderPath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -84,12 +96,12 @@ public class Database {
 	public void createCourseFolder(String semester, String course){
 		
 		// Create the course directory under the semester folder
-		String semesterDirectoryPath = Constants.directory + "/" + semester.replace(" ", "_");
-		String courseDirectoryPath   = semesterDirectoryPath + "/" + course.replace(" ", "_");
+		String semesterFolderPath = PathBuilder.buildPath(semester);
+		String courseFolderPath   = PathBuilder.buildPath(semester, course);
 		
 		try {
-			new Shell.Plain(Constants.shell).exec("mkdir " + semesterDirectoryPath);
-			new Shell.Plain(Constants.shell).exec("mkdir " + courseDirectoryPath);
+			new Shell.Plain(Constants.shell).exec("mkdir " + semesterFolderPath);
+			new Shell.Plain(Constants.shell).exec("mkdir " + courseFolderPath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -104,12 +116,12 @@ public class Database {
 	
 	// Get course data for the preparation of course table
 	public String[] getCourseData(String semester, String course){
-		String semesterDirectoryPath = Constants.directory + "/" + semester.replace(" ", "_");
-		String courseDirectoryPath   = semesterDirectoryPath + "/" + course.replace(" ", "_");
+		
+		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
 		String[] courseData = null;
 		
 		try {
-			String rawData = new Shell.Plain(Constants.shell).exec("cat " + courseDirectoryPath + "/assignments");
+			String rawData = new Shell.Plain(Constants.shell).exec("cat " + assignmentsFilePath);
 			courseData = rawData.split("[\\r\\n]+");
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -121,11 +133,10 @@ public class Database {
 	
 	// Delete directory with course name
 	public void deleteCourse(String semester, String course){
-		String courseDirectory = Constants.directory        + "/" + 
-								 semester.replace(" ", "_") + "/" +
-								 course.replace  (" ", "_");
+		
+		String courseFolderPath = PathBuilder.buildPath(semester, course);
 		try {
-			new Shell.Plain(Constants.shell).exec("rm -rf " + courseDirectory);
+			new Shell.Plain(Constants.shell).exec("rm -rf " + courseFolderPath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -134,10 +145,11 @@ public class Database {
 	
 	// Get all courses under the semester directory
 	public String[] getCourses(String semester){
-		String semesterDirectory = Constants.directory + "/" + semester.replace(" ", "_");
+		
+		String semesterFolderPath = PathBuilder.buildPath(semester);
 		String courses[] = null;
 		try {
-			String courseData = new Shell.Plain(Constants.shell).exec("ls " + semesterDirectory);
+			String courseData = new Shell.Plain(Constants.shell).exec("ls " + semesterFolderPath);
 			courses = courseData.split("[\\r\\n]+");
 			for (int i = 0; i < courses.length; i++){
 				courses[i].replace("_", " ");
@@ -156,12 +168,9 @@ public class Database {
 	// Create the students.txt file and populate it with class roster
 	public void createStudentsList(String semester, String course){
 		// TODO Populate students file with roster list
-		String studentsDirectoryPath = Constants.directory        + "/" + 
-									   semester.replace(" ", "_") + "/" +
-									   course.replace  (" ", "_") + "/" +
-									   "students";
+		String studentsFilePath = PathBuilder.buildPath(semester, course, "students");
 		try {
-			new Shell.Plain(Constants.shell).exec("touch " + studentsDirectoryPath);
+			new Shell.Plain(Constants.shell).exec("touch " + studentsFilePath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -182,14 +191,13 @@ public class Database {
 	
 	// Get the list of students in the course
 	public List<Student> getStudents(String semester, String course){
-		List<Student> students = new ArrayList<Student>();
-		String[] studentData = null;
-		String studentsDirectoryPath = Constants.directory        + "/" + 
-				   					   semester.replace(" ", "_") + "/" +
-				   					   course.replace  (" ", "_") + "/" +
-				   					   "students";
+		
+		List<Student> students  = new ArrayList<Student>();
+		String[] studentData    = null;
+		String studentsFilePath = PathBuilder.buildPath(semester, course, "students");
+		
 		try {
-			String rawData = new Shell.Plain(Constants.shell).exec("cat " + studentsDirectoryPath);
+			String rawData = new Shell.Plain(Constants.shell).exec("cat " + studentsFilePath);
 			studentData = rawData.split("[\\r\\n]+");
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -212,13 +220,12 @@ public class Database {
 	
 	// Create directory for assignments in Course folder
 	public void createAssignmentFiles(String semester, String course){
-		String assignmentsDirectoryPath = Constants.directory        + "/" + 
-										  semester.replace(" ", "_") + "/" +
-										  course.replace  (" ", "_") + "/" +
-										  "assignments";
+		
+		String assignmentsFilePath 	   = PathBuilder.buildPath(semester, course, "assignments");
+		String assignmentsListFilePath = PathBuilder.buildPath(semester, course, "assignments_list");
 		try {
-			new Shell.Plain(Constants.shell).exec("touch " + assignmentsDirectoryPath);
-			new Shell.Plain(Constants.shell).exec("touch " + assignmentsDirectoryPath + "_list");
+			new Shell.Plain(Constants.shell).exec("touch " + assignmentsFilePath);
+			new Shell.Plain(Constants.shell).exec("touch " + assignmentsListFilePath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -229,51 +236,19 @@ public class Database {
 	// TODO ADAPT TO NEW FORM
 	public void addAssignment(String semester, String course, String assignment){
 		
-		String courseDirectoryPath          = Constants.directory        + "/" + 
-											  semester.replace(" ", "_") + "/" +
-											  course.replace  (" ", "_");
+		String courseFolderPath 	   = PathBuilder.buildPath(semester, course);
+		String assignmentsFilePath 	   = PathBuilder.buildPath(semester, course, "assignments");
+		String assignmentsListFilePath = PathBuilder.buildPath(semester, course, "assignments_list");
 		
-		String assignmentDirectoryPath      = courseDirectoryPath + "/" +
-					 					      "assignments"       + "/" + 
-					 					      assignment.replace(" ", "_");
-		
-		String assignmentsListDirectoryPath = courseDirectoryPath + "/" +
-				  						 	  "assignments"       + "/" + 
-				  						 	  "assignment_list";
-		
-		// First, create the assignment text file
 		try {
-			new Shell.Plain(Constants.shell).exec("touch " + assignmentDirectoryPath);
-			new Shell.Plain(Constants.shell).exec("echo \"" + assignment + ".txt\"" + " >> " + assignmentsListDirectoryPath);
-			String message = new Shell.Plain(Constants.shell).exec("awk -F : 'BEGIN {ORS=\": \\n\"} {print $1}' " + courseDirectoryPath + "/students > " + assignmentDirectoryPath);
+			new Shell.Plain(Constants.shell).exec("touch " + assignmentsFilePath);
+			new Shell.Plain(Constants.shell).exec("echo \"" + assignment + ".txt\"" + " >> " + assignmentsListFilePath);
+			String message = new Shell.Plain(Constants.shell).exec("awk -F : 'BEGIN {ORS=\": \\n\"} {print $1}' " + courseFolderPath + "/students > " + assignmentsFilePath);
 			System.out.println(message);
 		} catch (IOException e) {
 			// TODO Error catch
 			e.printStackTrace();
 		}
-	}
-	
-	// Retrieve assignment object from class folder
-	// TODO ADAPT TO NEW FORM
-	public Assignment getAssignment(String semester, String course, String assignmentName){
-		// TODO Implement a check to see if the assignment exists
-		List<Grade> grades = getGrades(semester, course, assignmentName);
-		Assignment assignment = new Assignment(assignmentName, grades);
-		return assignment;
-	}
-	
-	// Retrieve all assignment objects from class folder
-	// TODO ADAPT TO NEW FORM
-	public List<Assignment> getAllAssignments(String semester, String course){
-		// TODO Implement a null check
-		List<Assignment> assignments = new ArrayList<Assignment>();
-		String[] assignmentList = this.getAssignmentList(semester, course);
-		
-		for (String assignmentName : assignmentList){
-			Assignment a = getAssignment(semester, course, assignmentName);
-			assignments.add(a);
-		}
-		return assignments;
 	}
 	
 	public void deleteAssignment(){
@@ -286,17 +261,21 @@ public class Database {
 	
 	// Get the list of assignments in the course
 	// TODO ADAPT TO NEW FORM
-	public String[] getAssignmentList(String semester, String course){
-		String assignmentsDirectory = Constants.directory        + "/" + 
-									  semester.replace(" ", "_") + "/" +
-									  course.replace  (" ", "_") + "/" + 
-									  "assignments_list";
-		String assignments[] = null;
+	public List<Assignment> getAssignmentList(String semester, String course){
+		
+		List<Assignment> assignments   = new ArrayList<Assignment>(); 
+		String assignmentData[]  	   = null;
+		String assignmentsListFilePath = PathBuilder.buildPath(semester, course, "assignments_list");
+		
 		try {
-			String assignmentData = new Shell.Plain(Constants.shell).exec("cat " + assignmentsDirectory);
-			assignments = assignmentData.split("[\\r\\n]+");
-			for (int i = 0; i < assignments.length; i++){
-				assignments[i].replace("_", " ");
+			String rawData = new Shell.Plain(Constants.shell).exec("cat " + assignmentsListFilePath);
+			assignmentData = rawData.split("[\\r\\n]+");
+			for (String item : assignmentData){
+				String assignmentInfo[] = item.split(":");
+				if (!assignmentInfo[0].isEmpty()){
+					Assignment assignment = new Assignment(assignmentInfo[0].replace("_", " "), assignmentInfo[1]);
+					assignments.add(assignment);
+				}
 			}
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -305,34 +284,18 @@ public class Database {
 		return assignments;
 	}
 	
-	// Retrieve all of the student ID/grade pairs from the .txt file
-	// TODO ADAPT TO NEW FORM
-	public List<Grade> getGrades(String semester, String course, String assignment){
-		List<Grade>  grades = new ArrayList<Grade>();
-		String[] gradeData = null;
-		String assignmentDirectory = Constants.directory          + "/" + 
-				  					 semester.replace  (" ", "_") + "/" +
-				  					 course.replace    (" ", "_") + "/" + 
-				  					 "assignments"                + "/" +
-				  					 assignment.replace(" ", "_");
-		try {
-			String rawData = new Shell.Plain(Constants.shell).exec("cat " + assignmentDirectory);
-			gradeData = rawData.split("[\\r\\n]+");
-			for (String data : gradeData){
-				System.out.println("-" + data + "-");
-			}
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+	// Update grade of a student when the information is changed
+	public void updateGrade(String semester, String course, String studentID, int column, String grade){
 		
-		for (String gradeInfo : gradeData){
-			String[] info = gradeInfo.split(":");
-			Grade grade = new Grade(info[0], info[1]);
-			grades.add(grade);
-		}
+		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
+		String updateCommand 	   = "awk -F : '$1==\"" + studentID + 
+				  			   		 "\"{OFS=\":\";$" + String.valueOf(column) + 
+				  			   		 "=\"" + grade + 
+				  			   		 "\"}1' " + assignmentsFilePath + 
+				  			   		 " > tmp && mv tmp " + assignmentsFilePath;
 		
-		return grades;
+		GradeUpdateThread gut = new GradeUpdateThread("gut1", updateCommand);
+		gut.start();
 	}
 	
 	/*
@@ -342,12 +305,9 @@ public class Database {
 	// Create the rubric.txt file and populate it with configurations
 	public void createRubric(String semester, String course){
 		// TODO Populate rubric file with configs
-		String rubricDirectoryPath = Constants.directory        + "/" + 
-									 semester.replace(" ", "_") + "/" +
-									 course.replace  (" ", "_") + "/" +
-									 "rubric";
+		String rubricFilePath = PathBuilder.buildPath(semester, course, "rubric");
 		try {
-			new Shell.Plain(Constants.shell).exec("touch " + rubricDirectoryPath);
+			new Shell.Plain(Constants.shell).exec("touch " + rubricFilePath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -358,8 +318,28 @@ public class Database {
 		// TODO Update the rubric file when adjustments are made
 	}
 	
-	public void getRubric(){
-		// TODO Get course rubric information
+	// Get course rubric information
+	public List<GradeCategory> getRubric(String semester, String course){
+		
+		String rubricData[] 				= null;
+		String rubricFilePath 				= PathBuilder.buildPath(semester, course, "rubric");
+		List<GradeCategory> gradeCategories = new ArrayList<GradeCategory>(); 
+		
+		try {
+			String rawData = new Shell.Plain(Constants.shell).exec("cat " + rubricFilePath);
+			System.out.println(rawData);
+			rubricData = rawData.split("[\\r\\n]+");
+			for (String item : rubricData){
+				String rubricInfo[] = item.split(":");
+				if (!rubricInfo[0].isEmpty()){
+					GradeCategory gw = new GradeCategory(rubricInfo[0], Integer.parseInt(rubricInfo[1]));
+					gradeCategories.add(gw);
+				}
+			}
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return gradeCategories;
 	}
-	
 }
