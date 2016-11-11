@@ -10,7 +10,12 @@
 
 package constants;
 
+import java.util.List;
+
 import com.jcabi.ssh.Shell;
+
+import dbclasses.Assignment;
+import dbclasses.GradeCategory;
 
 public class Constants {
 
@@ -22,4 +27,8 @@ public class Constants {
 	public static int    portNo = 22;							// Standard port number for SSH login
 	public static Shell  shell;									// SSH shell that is used to execute commands on server
 	public static String defaultSemester = "Fall 2016";			// The default semester that is shown in the "Courses" tab
+	
+	// State Dependent Data Holders
+	public static List<Assignment> assignments;					// Contains the list of assignments for the current course with their corresponding grade categories
+	public static List<GradeCategory> gcs;						// Contains the list of grade categories with associated assignments for current course
 }

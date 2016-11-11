@@ -177,8 +177,13 @@ public class Database {
 		}
 	}
 	
-	public void addStudent(){
-		// TODO Add a student to the directory
+	// Add a student to the directory
+	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName){
+		
+		String studentsFilePath    = PathBuilder.buildPath(semester, course, "students");
+		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
+		
+		
 	}
 	
 	public void deleteStudent(){
@@ -233,22 +238,17 @@ public class Database {
 	}
 	
 	// Add an assignment to the assignment directory
-	// TODO ADAPT TO NEW FORM
-	public void addAssignment(String semester, String course, String assignment){
+	public void addAssignment(String semester, String course, String assignment, String category){
 		
-		String courseFolderPath 	   = PathBuilder.buildPath(semester, course);
 		String assignmentsFilePath 	   = PathBuilder.buildPath(semester, course, "assignments");
 		String assignmentsListFilePath = PathBuilder.buildPath(semester, course, "assignments_list");
+		String assignmentsCommand      = "awk -F: '{$(NF+1)=\" \";}1' OFS=: " + assignmentsFilePath + " > tmp && mv tmp " + assignmentsFilePath;
+		String assignmentsListCommand  = "echo \"" + assignment + ":" + category +"\" >> " + assignmentsListFilePath;
 		
-		try {
-			new Shell.Plain(Constants.shell).exec("touch " + assignmentsFilePath);
-			new Shell.Plain(Constants.shell).exec("echo \"" + assignment + ".txt\"" + " >> " + assignmentsListFilePath);
-			String message = new Shell.Plain(Constants.shell).exec("awk -F : 'BEGIN {ORS=\": \\n\"} {print $1}' " + courseFolderPath + "/students > " + assignmentsFilePath);
-			System.out.println(message);
-		} catch (IOException e) {
-			// TODO Error catch
-			e.printStackTrace();
-		}
+		GradeUpdateThread gut1 = new GradeUpdateThread("gut1", assignmentsCommand);
+		GradeUpdateThread gut2 = new GradeUpdateThread("gut2", assignmentsListCommand);
+		gut1.start();
+		gut2.start();
 	}
 	
 	public void deleteAssignment(){
@@ -260,7 +260,6 @@ public class Database {
 	}
 	
 	// Get the list of assignments in the course
-	// TODO ADAPT TO NEW FORM
 	public List<Assignment> getAssignmentList(String semester, String course){
 		
 		List<Assignment> assignments   = new ArrayList<Assignment>(); 
