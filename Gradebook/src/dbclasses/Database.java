@@ -147,12 +147,14 @@ public class Database {
 	public String[] getCourses(String semester){
 		
 		String semesterFolderPath = PathBuilder.buildPath(semester);
-		String courses[] = null;
+		String rawCourses[] = null;
+		String courses[]    = null;
 		try {
 			String courseData = new Shell.Plain(Constants.shell).exec("ls " + semesterFolderPath);
-			courses = courseData.split("[\\r\\n]+");
-			for (int i = 0; i < courses.length; i++){
-				courses[i].replace("_", " ");
+			rawCourses = courseData.split("[\\r\\n]+");
+			courses    = new String[rawCourses.length];
+			for (int i = 0; i < rawCourses.length; i++){
+				courses[i] = rawCourses[i].replace("_", " ");
 			}
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -178,12 +180,15 @@ public class Database {
 	}
 	
 	// Add a student to the directory
-	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName){
+	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName, String columnCount){
 		
-		String studentsFilePath    = PathBuilder.buildPath(semester, course, "students");
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
+		String addStudentCommand   = "echo \"" + studentID + ":" + fName + ":" + lName + "\" >> " + assignmentsFilePath + " | " + 
+									 "awk -F : '$1==\"" + studentID + "\"{OFS=\":\"; $" + columnCount + "=\" \"}1' " + 
+									 assignmentsFilePath + " >> tmp && mv tmp " + assignmentsFilePath;
 		
-		
+		GradeUpdateThread gut1 = new GradeUpdateThread("gut1", addStudentCommand);
+		gut1.start();
 	}
 	
 	public void deleteStudent(){
@@ -239,7 +244,7 @@ public class Database {
 	
 	// Add an assignment to the assignment directory
 	public void addAssignment(String semester, String course, String assignment, String category){
-		
+
 		String assignmentsFilePath 	   = PathBuilder.buildPath(semester, course, "assignments");
 		String assignmentsListFilePath = PathBuilder.buildPath(semester, course, "assignments_list");
 		String assignmentsCommand      = "awk -F: '{$(NF+1)=\" \";}1' OFS=: " + assignmentsFilePath + " > tmp && mv tmp " + assignmentsFilePath;
@@ -326,7 +331,6 @@ public class Database {
 		
 		try {
 			String rawData = new Shell.Plain(Constants.shell).exec("cat " + rubricFilePath);
-			System.out.println(rawData);
 			rubricData = rawData.split("[\\r\\n]+");
 			for (String item : rubricData){
 				String rubricInfo[] = item.split(":");

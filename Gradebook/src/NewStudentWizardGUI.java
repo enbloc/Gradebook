@@ -17,7 +17,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
@@ -25,22 +24,24 @@ import dbclasses.Database;
 
 public class NewStudentWizardGUI {
 
-	private JFrame  mainFrame;
-	private JPanel  mainPanel;
-	private JPanel  labels;
-	private JPanel  controls;
+	private String studentID;
+	private String studentName;
+	private JFrame mainFrame;
+	private JPanel mainPanel;
+	private JPanel labels;
+	private JPanel controls;
 
 	
-	public NewStudentWizardGUI(String semester, String course, boolean STUDENT_INFO_EMPTY){
+	public NewStudentWizardGUI(String semester, String course, String columnCount, boolean STUDENT_INFO_EMPTY){
 		
 		mainPanel = new JPanel(new BorderLayout());
 
 		// Set up text labels on the left
         labels = new JPanel(new GridLayout(0,1,2,2));
-        labels.add(new JLabel("Student ID: ", SwingConstants.RIGHT));
-        labels.add(new JLabel("First Name: ", SwingConstants.RIGHT));
+        labels.add(new JLabel("Student ID: "    , SwingConstants.RIGHT));
+        labels.add(new JLabel("First Name: "    , SwingConstants.RIGHT));
         labels.add(new JLabel("Middle Initial: ", SwingConstants.RIGHT));
-        labels.add(new JLabel("Last Name: ", SwingConstants.RIGHT));
+        labels.add(new JLabel("Last Name: "     , SwingConstants.RIGHT));
         labels.add(new JLabel());
         mainPanel.add(labels, BorderLayout.WEST);
 
@@ -54,8 +55,8 @@ public class NewStudentWizardGUI {
         warning.setForeground(Color.RED);
         controls.add(studentID);
         controls.add(fName);
-        controls.add(lName);
         controls.add(mName);
+        controls.add(lName);
         controls.add(warning);
         mainPanel.add(controls, BorderLayout.CENTER);
 
@@ -72,7 +73,7 @@ public class NewStudentWizardGUI {
 	    	if (studentID.getText().isEmpty() ||
 	    		    fName.getText().isEmpty() ||
 	    		    lName.getText().isEmpty()) {
-	    		new NewStudentWizardGUI(semester, course, true);
+	    		new NewStudentWizardGUI(semester, course, columnCount, true);
 	    	} else {
 	    		Database db = new Database();
 	    		db.addStudent(semester, 
@@ -80,8 +81,36 @@ public class NewStudentWizardGUI {
 	    					  studentID.getText(),
 	    					  fName.getText(),
 	    					  lName.getText(),
-	    					  mName.getText());
+	    					  mName.getText(), 
+	    					  columnCount);
+	    		this.setStudentID(studentID.getText());
+	    		this.setStudentName(lName.getText() + ", " +
+	    				           fName.getText());
+	    		
 	    	}
 	    }
+	}
+
+	/*
+	 * Getters and Setters
+	 */
+	
+	public String getStudentID() {
+		return studentID;
+	}
+
+
+	public void setStudentID(String studentID) {
+		this.studentID = studentID;
+	}
+
+
+	public String getStudentName() {
+		return studentName;
+	}
+
+
+	public void setStudentName(String studentName) {
+		this.studentName = studentName;
 	}
 }

@@ -16,25 +16,25 @@ import java.util.List;
 public class GradeCategory {
 
 	private String category;
-	private List<Integer> grades;
+	private List<Double> grades;
 	private double weight;
 	private int gradeNumber;
 	
 	public GradeCategory(String category, int weight){
 		this.category = category;
-		this.grades = new ArrayList<Integer>();
+		this.grades = new ArrayList<Double>();
 		this.weight = (weight * .01);
 		this.gradeNumber = 0;
 	}
 	
-	public void addGrade(int grade){
+	public void addGrade(double grade){
 		grades.add(grade);
 		gradeNumber++;
 	}
 	
 	public double getSum(){
 		double total = 0;
-		for (int grade : grades){
+		for (double grade : grades){
 			total += grade;
 		}
 		return total;
@@ -49,7 +49,7 @@ public class GradeCategory {
 	}
 	
 	public void clearValues(){
-		grades = new ArrayList<Integer>();
+		grades = new ArrayList<Double>();
 		gradeNumber = 0;
 	}
 	
@@ -63,10 +63,10 @@ public class GradeCategory {
 	public void setCategory(String category) {
 		this.category = category;
 	}
-	public List<Integer> getGrades() {
+	public List<Double> getGrades() {
 		return grades;
 	}
-	public void setGrades(List<Integer> grades) {
+	public void setGrades(List<Double> grades) {
 		this.grades = grades;
 	}
 	public double getWeight() {
