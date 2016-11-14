@@ -183,9 +183,10 @@ public class Database {
 	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName, String columnCount){
 		
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
-		String addStudentCommand   = "echo \"" + studentID + ":" + fName + ":" + lName + "\" >> " + assignmentsFilePath + " | " + 
-									 "awk -F : '$1==\"" + studentID + "\"{OFS=\":\"; $" + columnCount + "=\" \"}1' " + 
-									 assignmentsFilePath + " >> tmp && mv tmp " + assignmentsFilePath;
+		String addStudentCommand   = "echo \"" + studentID + ":" + fName + ":" + lName + "\" >> " + assignmentsFilePath + " | " +      //TODO FIX THIS COMMAND
+									 "awk -F : '$1==\"" + studentID + "\"{OFS=\":\"; $" + columnCount + "=\" \"}1' " + assignmentsFilePath +
+									 " >> tmp1 && mv tmp1 " + assignmentsFilePath + 
+									 " | sort -t : -k 3 " + assignmentsFilePath + " >> tmp2 && mv tmp2 " + assignmentsFilePath;
 		
 		GradeUpdateThread gut1 = new GradeUpdateThread("gut1", addStudentCommand);
 		gut1.start();
@@ -258,10 +259,6 @@ public class Database {
 	
 	public void deleteAssignment(){
 		// TODO Delete an assignment from the assignment directory
-	}
-	
-	public void updateAssignment(){
-		// TODO Update an assignment in the assignment directory
 	}
 	
 	// Get the list of assignments in the course
@@ -345,4 +342,53 @@ public class Database {
 		}
 		return gradeCategories;
 	}
+	
+	/*
+	 * Grade Scheme Methods
+	 */
+	
+	// Create grade scheme file in the course directory
+	public void createGradeScheme(String semester, String course){
+		// TODO Populate scheme file with configs
+		String schemeFilePath = PathBuilder.buildPath(semester, course, "gradescheme");
+		try {
+			new Shell.Plain(Constants.shell).exec("touch " + schemeFilePath);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
+	
+	// Update grade scheme file with new configurations
+	public void updateGradeScheme(String semester, String course){
+		
+	}
+	
+	// Retrieve the grade scheme as a list of GradeRanges
+	public List<GradeRange> getGradeScheme(String semester, String course){
+		String schemeData[] 				= null;
+		String schemeFilePath 				= PathBuilder.buildPath(semester, course, "gradescheme");
+		List<GradeRange> gradeRanges	    = new ArrayList<GradeRange>(); 
+		
+		try {
+			String rawData = new Shell.Plain(Constants.shell).exec("cat " + schemeFilePath);
+			schemeData = rawData.split("[\\r\\n]+");
+			for (String item : schemeData){
+				String schemeInfo[] = item.split(":");
+				if (!schemeInfo[0].isEmpty()){
+					GradeRange gr = new GradeRange(schemeInfo[0], Double.valueOf(schemeInfo[1]), Double.valueOf(schemeInfo[2]));
+					gradeRanges.add(gr);
+				}
+			}
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return gradeRanges;
+	}
+	
+	
+	
+	
+	
 }

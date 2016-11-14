@@ -35,13 +35,16 @@ import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
 import constants.Constants;
+import constants.Global;
 import dbclasses.Assignment;
 import dbclasses.Database;
 import dbclasses.GradeCategory;
+import dbclasses.GradeRange;
 import dbclasses.Student;
 
 import com.jcabi.ssh.Shell;
@@ -189,6 +192,15 @@ public class GradebookGUI extends JApplet {
 		coursesTablePanel.setBorder(coursesTableTitle);
 		coursesTable.setModel(prepareTable(courseSelector.getSelectedItem().toString()));
 		
+		// Center the values of the table
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		for (int i = 0; i < tableModel.getColumnCount(); i++ ){
+			if (i != 1){ 	// Do not center name column
+				coursesTable.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+			}
+		}
+		
 		JPanel courseTabWrapper = new JPanel();
 		courseTabWrapper.setLayout(new FlowLayout());
 		
@@ -286,10 +298,10 @@ public class GradebookGUI extends JApplet {
 		// table model to the desired JTable by getting a count of the number of courses        //
 		// that have been added since the last table update, and move columns back accordingly. //
 		
-		ASSIGNMENTS_ADDED = (tableModel.getColumnCount() - 1) - tableModel.findColumn("Average");	// Calculate the number of courses added since update
+		ASSIGNMENTS_ADDED = (tableModel.getColumnCount() - 1) - tableModel.findColumn("Grade");	// Calculate the number of courses added since update
 		for (int i = ASSIGNMENTS_ADDED; i > 0; i--){													
 			coursesTable.moveColumn(coursesTable.getColumnCount() - i,			// Get the new column at index "last - i"	 
-									coursesTable.getColumnCount() - (i+1));		// Move column to index "last - (i+1)", on the left side of "Average" column
+									coursesTable.getColumnCount() - (i+2));		// Move column to index "last - (i+1)", on the left side of "Average" column
 		}
 		coursesTable.setModel(tableModel); 
 	}
@@ -348,14 +360,15 @@ public class GradebookGUI extends JApplet {
 		// Get course data
 		Database db 		 		  = new Database();
 		String[] courseData  		  = db.getCourseData		(Constants.defaultSemester, course);
-		Constants.assignments  		  = db.getAssignmentList    (Constants.defaultSemester, course);
-		Constants.gcs		 		  = db.getRubric			(Constants.defaultSemester, course);
+		Global.assignments  		  = db.getAssignmentList    (Constants.defaultSemester, course);
+		Global.gradeCategories		  = db.getRubric			(Constants.defaultSemester, course);
+		Global.gradeRanges			  = db.getGradeScheme		(Constants.defaultSemester, course);
 		List<Student> students 	   	  = new ArrayList<Student>();
 		STUDENTS_ADDED                = 0;	// Reset counter for students added since table update.
 		
 		// Initialize data array with number of students and assignments
-		int rows = courseData.length;					// Number of students
-		int cols = Constants.assignments.size() + 2;	// Number of assignments + id column + name column
+		int rows = courseData.length;				// Number of students
+		int cols = Global.assignments.size() + 2;	// Number of assignments + id column + name column
 		
 		// Initialize object array
 		Object[][] tableData = new Object[rows][cols];
@@ -403,21 +416,39 @@ public class GradebookGUI extends JApplet {
 		String columnNames[] = new String[cols];
 		columnNames[0] = "ID";
 		columnNames[1] = "Name";
-		if (!Constants.assignments.isEmpty()){
+		if (!Global.assignments.isEmpty()){
 			for (int i = 2; i < cols; i++){
-				columnNames[i] = Constants.assignments.get(i-2).getName().replace("_", " ");
+				columnNames[i] = Global.assignments.get(i-2).getName().replace("_", " ");
 			}
 		}
 		
-		// Create the table and return it
-		tableModel = new DefaultTableModel(tableData, columnNames);
+		// Create the table and make appropriate columns uneditable
+		tableModel = new DefaultTableModel(tableData, columnNames){
+			@Override
+		    public boolean isCellEditable(int row, int column)
+		    {
+				boolean IS_EDITABLE = true;
+				
+				if (row    == tableModel.getRowCount() - 1     ||
+					column == tableModel.findColumn("Grade")   ||
+					column == tableModel.findColumn("Average") ||
+					column == 0 || 
+					column == 1 ){
+					IS_EDITABLE = false;
+				}
+					
+				return IS_EDITABLE;
+		    }
+		};
 		
 		// Calculate averages and add to table
-		if (!students.isEmpty() || !Constants.assignments.isEmpty()){
+		if (!students.isEmpty() || !Global.assignments.isEmpty()){
 			Object[] column = getRowAverages(tableModel, false);
 			tableModel.addColumn("Average", column);
 			Object[] row = getColumnAverages(tableModel, false);
 			tableModel.addRow(row);
+			Object[] letterGradeColumn = getLetterGrades(column);
+			tableModel.addColumn("Grade", letterGradeColumn);
 		}
 		
 		// Add a listener for changes in the values of the cells
@@ -458,13 +489,13 @@ public class GradebookGUI extends JApplet {
 		// This is to prevent the "Average" col/row from being used in recalculation.
 		if (IS_RECALC && ASSIGNMENTS_ADDED == 0){
 			rowCount = model.getRowCount() - 1;
-			colCount = model.getColumnCount() - 1;
+			colCount = model.getColumnCount() - 2;
 		} else if (ASSIGNMENTS_ADDED > 0 && STUDENTS_ADDED == 0){
 			rowCount = model.getRowCount() - 1;
-			colCount = model.getColumnCount();
+			colCount = model.getColumnCount() - 1;
 		} else if (ASSIGNMENTS_ADDED == 0 && STUDENTS_ADDED > 0){
 			rowCount = model.getRowCount();
-			colCount = model.getColumnCount() - 1;
+			colCount = model.getColumnCount() - 2;
 		} else {
 			rowCount = model.getRowCount();
 			colCount = model.getColumnCount();
@@ -483,9 +514,11 @@ public class GradebookGUI extends JApplet {
 				System.out.println("COL #" + i);
 				// If the cell value is not blank or a
 				// calculated column such as "Average"
-				if (!model.getValueAt(j, i).toString().isEmpty() &&
+				if (!(model.getValueAt(j, i) == null) &&
+					!model.getValueAt(j, i).toString().isEmpty() &&
 					!model.getValueAt(j, i).equals(" ") &&
-					!model.getColumnName(i).equals("Average")){
+					!model.getColumnName(i).equals("Average") && 
+					!model.getColumnName(i).equals("Grade")){
 					
 					System.out.println("CELL == " + model.getValueAt(j, i).toString());
 					
@@ -494,7 +527,7 @@ public class GradebookGUI extends JApplet {
 					String categoryName = null;
 					
 					// Find the assignment that matches the columnName, and set categoryName == to the assignments category
-					for (Assignment a : Constants.assignments){
+					for (Assignment a : Global.assignments){
 						if (a.getName().replace("_", " ").equals(columnName)){
 							categoryName = a.getCategory();
 							break;
@@ -502,7 +535,7 @@ public class GradebookGUI extends JApplet {
 					}
 					
 					// Find the GradeCategory that matches the categoryName
-					for (GradeCategory g : Constants.gcs){
+					for (GradeCategory g : Global.gradeCategories){
 						if (categoryName.equals(g.getCategory())){
 							
 							// Add the cell value to GradeCategory for calculations
@@ -517,7 +550,7 @@ public class GradebookGUI extends JApplet {
 				}
 			}
 			// Perform calculation
-			for (GradeCategory g : Constants.gcs){
+			for (GradeCategory g : Global.gradeCategories){
 				if (g.getGradeNumber() > 0){
 					System.out.println("g.getGradeNumber == " + g.getGradeNumber());
 					totalWeight += g.getWeight();
@@ -533,7 +566,7 @@ public class GradebookGUI extends JApplet {
 			// Clear all values
 			finalGrade  = 0;
 			totalWeight = 0;
-			for (GradeCategory g : Constants.gcs){
+			for (GradeCategory g : Global.gradeCategories){
 				g.clearValues();
 			}
 		}
@@ -576,8 +609,10 @@ public class GradebookGUI extends JApplet {
 		// in each column to calculate average //
 		for (int i = 2; i < colCount; i++) {
 			for (int j = 0; j < rowCount; j++) {
-				if (!model.getValueAt(j, i).equals(" ") && 
-					!model.getValueAt(j, i).toString().isEmpty()){
+				if (!(model.getValueAt(j, i) == null) &&
+					!model.getValueAt(j, i).equals(" ") && 
+					!model.getValueAt(j, i).toString().isEmpty() &&
+					!model.getColumnName(i).equals("Grade")){
 						sum += Double.parseDouble(model.getValueAt(j, i).toString());
 						items += 1;
 				}
@@ -585,11 +620,44 @@ public class GradebookGUI extends JApplet {
 			// Perform calculation
 			double total = sum/items;
 			total = Math.round(total * 100);
-			row[i] = total/100;
+			
+			// Check if at the Grade Column
+			if (model.getColumnName(i).equals("Grade")){
+				for (GradeRange gr : Global.gradeRanges){
+					if (gr.isInRange(Double.valueOf(row[i-1].toString()))){
+						row[i] = gr.getLetterGrade();
+						break;
+					}
+				}
+			} else {
+				row[i] = total/100;
+			}
+			
 			sum = 0;
 			items = 0;
 		}
 		return row;	
+	}
+	
+	/*
+	 * Get Letter Grades
+	 * 
+	 * This function takes the individual student averages and converts them to
+	 * letter grades, based on the information contained in the gradescheme file.
+	 * 
+	 */
+	public Object[] getLetterGrades(Object[] averages){
+		
+		Object[] letterGrades = new Object[averages.length];
+		for (int i = 0; i < averages.length; i++){
+			for (GradeRange gr : Global.gradeRanges){
+				if (gr.isInRange(Double.valueOf(averages[i].toString()))){
+					letterGrades[i] = gr.getLetterGrade();
+					break;
+				}
+			}
+		}
+		return letterGrades;
 	}
 	
 	/*
@@ -630,13 +698,14 @@ public class GradebookGUI extends JApplet {
         // Column/row calculation variables
         int averagesRow    = dtm.getRowCount() - 1;			// Index of the row that contains the class averages
         int averagesColumn = dtm.findColumn("Average");		// Index in table model that contains the "Average" column
+        int gradeColumn    = dtm.findColumn("Grade"); 		// Index in table model that contains the "Grade" column
         int fileColumn;										// Stores the column index where the new grade should be inserted in the file
         
         // The count of the number of columns to the right of the //
-        // "Average" column. This also represents the number of   //
+        // "Grade" column. This also represents the number of     //
         // assignments added since the table was populated from   //
         // the file server. This is critical in the calculation.  //
-        ASSIGNMENTS_ADDED = (dtm.getColumnCount() - 1) - averagesColumn;
+        ASSIGNMENTS_ADDED = (dtm.getColumnCount() - 1) - gradeColumn;
         
         // Adjust the value of fileColumn depending on //
         // whether or not assignments have been added  //
@@ -670,6 +739,12 @@ public class GradebookGUI extends JApplet {
         for (int j = 2; j < dtm.getColumnCount(); j++){
         	dtm.setValueAt(row[j], averagesRow, j);
         }
+        
+        // Rebuild "Grade" column with new values
+        Object[] letterGradeColumn = getLetterGrades(column);
+        for (int n = 0; n < dtm.getRowCount() - 1; n++){
+        	dtm.setValueAt(letterGradeColumn[n], n, gradeColumn);
+        }
 	}
 	
 	/*
@@ -682,8 +757,8 @@ public class GradebookGUI extends JApplet {
 	public void prepareRubricPanel(String course){
 		coursesRubricPanel.removeAll();
 		Database db = new Database();
-		List<GradeCategory> gcs = db.getRubric(Constants.defaultSemester, course);
-		for (GradeCategory gc : gcs){
+		Global.gradeCategories = db.getRubric(Constants.defaultSemester, course);
+		for (GradeCategory gc : Global.gradeCategories){
 			int weight = (int) (gc.getWeight() * 100);
 			coursesRubricPanel.add(new JLabel(gc.getCategory() + " = " + weight + "%"));
 		}

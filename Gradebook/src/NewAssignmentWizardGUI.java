@@ -20,7 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import constants.Constants;
+import constants.Global;
 import dbclasses.Assignment;
 import dbclasses.Database;
 
@@ -71,7 +71,7 @@ public class NewAssignmentWizardGUI {
 	    		  category.getText().isEmpty()) {
 	    			new NewAssignmentWizardGUI(semester, course, true);
 	    	} else {
-	    		Constants.assignments.add(new Assignment(assignment.getText(),
+	    		Global.assignments.add(new Assignment(assignment.getText(),
 	    											       category.getText()));
 	    		Database db = new Database();
     			db.addAssignment(semester, 
