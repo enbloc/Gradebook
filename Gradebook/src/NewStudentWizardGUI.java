@@ -85,7 +85,8 @@ public class NewStudentWizardGUI {
 	    					  columnCount);
 	    		this.setStudentID(studentID.getText());
 	    		this.setStudentName(lName.getText() + ", " +
-	    				           fName.getText());
+	    				            fName.getText() + " "  + 
+	    							mName.getText());
 	    		
 	    	}
 	    }

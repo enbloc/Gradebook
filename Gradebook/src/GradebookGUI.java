@@ -32,6 +32,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.ProgressMonitor;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -72,11 +73,15 @@ public class GradebookGUI extends JApplet {
 	private JComboBox<String> 	courseSelector;
 	private DefaultTableModel   tableModel;
 	private DefaultComboBoxModel<String> dcbm;
+	private LoadingWindow		loadingWindow;
 	
 	// Flags
 	private int     ASSIGNMENTS_ADDED = 0;
 	private int 	STUDENTS_ADDED = 0;
 	private boolean	UPDATE_UI    = true;
+	
+	// Static variables
+	static int loadingProgress = 0;
 	
 	// GUI Class Constructor
 	public GradebookGUI(){
@@ -92,7 +97,8 @@ public class GradebookGUI extends JApplet {
 		
 		// Initialize the main window
 		mainFrame = new JFrame("Gradebook");
-		mainFrame.setSize(1366,768);
+		mainFrame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
+		//mainFrame.setUndecorated(true);
 		mainFrame.addWindowListener(new WindowAdapter() {
 	         public void windowClosing(WindowEvent windowEvent){
 	            System.exit(0);
@@ -101,7 +107,8 @@ public class GradebookGUI extends JApplet {
 		
 		//Login Interface
 		mainFrame.setVisible(true);
-		new LoginGUI(mainFrame, false, false);
+		loadingWindow = new LoadingWindow();
+		new LoginGUI(mainFrame, loadingWindow, false, false);
 		
 		// Get the working directory from server
 		try {
@@ -182,6 +189,9 @@ public class GradebookGUI extends JApplet {
 		combinedControlPanel.add(coursesRubricPanel);
 		JPanel combinedControlPanelWrapper = new JPanel(new FlowLayout());
 		combinedControlPanelWrapper.add(combinedControlPanel);
+		
+		// Close LoadingWindow
+		loadingWindow.closeWindow();
 		
 		// Course Table Panel
 		coursesTablePanel = new JPanel();
@@ -304,6 +314,15 @@ public class GradebookGUI extends JApplet {
 									coursesTable.getColumnCount() - (i+2));		// Move column to index "last - (i+1)", on the left side of "Average" column
 		}
 		coursesTable.setModel(tableModel); 
+		
+		// Center the values of the table
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		for (int i = 0; i < tableModel.getColumnCount(); i++ ){
+			if (i != 1){ 	// Do not center name column
+				coursesTable.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+			}
+		}
 	}
 	
 	/*
@@ -344,6 +363,19 @@ public class GradebookGUI extends JApplet {
 	}
 	
 	/*
+	 * Edit Rubric Function
+	 * 
+	 * This function is called whenever the "Edit Rubric" button is pressed. It runs a 
+	 * wizard that provides the list of current rubric grade categories (if any) and gives 
+	 * the user the option to edit them or add new categories if they want.
+	 * 
+	 */
+	public void editRubric(){
+		String currentCourse = courseSelector.getSelectedItem().toString();
+		
+	}
+	
+	/*
 	 * prepareTable()
 	 * 
 	 * Retrieve and initialize the values for the Gradebook table.
@@ -357,14 +389,47 @@ public class GradebookGUI extends JApplet {
 	 */
 	public DefaultTableModel prepareTable(String course){
 		
-		// Get course data
-		Database db 		 		  = new Database();
-		String[] courseData  		  = db.getCourseData		(Constants.defaultSemester, course);
-		Global.assignments  		  = db.getAssignmentList    (Constants.defaultSemester, course);
-		Global.gradeCategories		  = db.getRubric			(Constants.defaultSemester, course);
-		Global.gradeRanges			  = db.getGradeScheme		(Constants.defaultSemester, course);
-		List<Student> students 	   	  = new ArrayList<Student>();
-		STUDENTS_ADDED                = 0;	// Reset counter for students added since table update.
+		Component parent = (Component) this;
+        ProgressMonitor monitor = new ProgressMonitor(parent, "Loading Progress", "Getting Started...", 0, 100);        
+        
+		// Initialize Database
+		Database db = new Database();
+		
+		// Retrieve course data
+		loadingProgress = 0;
+		monitor.setProgress(loadingProgress);
+		monitor.setNote("Loading course data...");
+		String[] courseData = db.getCourseData(Constants.defaultSemester, 
+											   course);
+		
+		// Retrieve Assignment List
+		loadingProgress = 20;
+		monitor.setProgress(loadingProgress);
+		monitor.setNote("Loading assignment data...");
+		Global.assignments = db.getAssignmentList(Constants.defaultSemester, 
+												  course);
+		
+		// Retrieve Rubric Data
+		loadingProgress = 40;
+		monitor.setProgress(loadingProgress);
+		monitor.setNote("Loading rubric data...");
+		Global.gradeCategories = db.getRubric(Constants.defaultSemester, 
+											  course);
+		
+		// Retrieve Letter Grade Ranges
+		loadingProgress = 60;
+		monitor.setProgress(loadingProgress);
+		monitor.setNote("Loading grade scheme data...");
+		Global.gradeRanges = db.getGradeScheme(Constants.defaultSemester, 
+											   course);
+		
+		// Begin loading coursebook interface
+		loadingProgress = 80;
+		monitor.setProgress(loadingProgress);
+		monitor.setNote("Loading interface...");
+		
+		List<Student> students = new ArrayList<Student>();
+		STUDENTS_ADDED = 0;	// Reset counter for students added since table update.
 		
 		// Initialize data array with number of students and assignments
 		int rows = courseData.length;				// Number of students
@@ -380,10 +445,10 @@ public class GradebookGUI extends JApplet {
 				Student student = new Student(studentInfo[0],
 											  studentInfo[1],
 											  studentInfo[2],
-											  null);
+											  studentInfo[3]);
 				
 				List<String> grades = new ArrayList<String>();
-				for (int i = 3; i < studentInfo.length; i++){
+				for (int i = 4; i < studentInfo.length; i++){
 					grades.add(studentInfo[i]);
 				}
 				student.setGrades(grades);
@@ -403,7 +468,9 @@ public class GradebookGUI extends JApplet {
 					if (j == 0){
 						tableData[i][j] = student.getId();
 					} else if (j == 1){
-						tableData[i][j] = student.getLname() + ", " + student.getFname();
+						tableData[i][j] = student.getLname() + ", " + 
+									 	  student.getFname() + " " + 
+									 	  student.getMi();
 					} else {
 						List<String> grades = student.getGrades();
 						tableData[i][j] = grades.get(j-2);
@@ -464,6 +531,11 @@ public class GradebookGUI extends JApplet {
 		    	  }
 		      }
 		    });
+		
+		loadingProgress = 100;
+		monitor.setProgress(loadingProgress);
+		monitor.setNote("Done!");
+		monitor.close();
 		
 		return tableModel;
 	}
@@ -711,9 +783,9 @@ public class GradebookGUI extends JApplet {
         // whether or not assignments have been added  //
         // (Offset for the calculated columns)         //
         if (ASSIGNMENTS_ADDED > 0)
-        	fileColumn = e.getColumn() + 1;	
+        	fileColumn = e.getColumn() + 2;	
         else
-        	fileColumn = e.getColumn() + 2;
+        	fileColumn = e.getColumn() + 3;
         
         // Create new thread and insert into DB
         Database db = new Database();

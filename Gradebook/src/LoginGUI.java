@@ -32,7 +32,7 @@ public class LoginGUI {
 	boolean LOGIN_INFO_EMPTY  = false;
 	boolean LOGIN_AUTH_FAILED = false;
 	
-    public LoginGUI(JFrame frame, boolean LOGIN_INFO_EMPTY, boolean LOGIN_AUTH_FAILED) {
+    public LoginGUI(JFrame frame, LoadingWindow loadingWindow, boolean LOGIN_INFO_EMPTY, boolean LOGIN_AUTH_FAILED) {
     	this.LOGIN_INFO_EMPTY  = LOGIN_INFO_EMPTY;
     	this.LOGIN_AUTH_FAILED = LOGIN_AUTH_FAILED;
     	
@@ -72,7 +72,7 @@ public class LoginGUI {
 	    	// If login field is empty, relaunch login
 	    	if (username.getText().isEmpty() || 
 	    		password.getPassword().length == 0 ){
-	    		new LoginGUI(frame, true, false);
+	    		new LoginGUI(frame, loadingWindow, true, false);
 	    		LOGIN_SUCCESS = false;
 	    		
 	    	// Else, handle credential info
@@ -80,9 +80,10 @@ public class LoginGUI {
 	    		// TODO Validate credentials
 	    		Constants.username = username.getText();
 	    		Constants.password = new String(password.getPassword());
+	    		loadingWindow.displayWindow();
 	    		LOGIN_SUCCESS = sshLogin();
 	    		if (!LOGIN_SUCCESS){
-	    			new LoginGUI(frame, false, true);
+	    			new LoginGUI(frame, loadingWindow, false, true);
 	    		}
 	    	}
 	    } else {

@@ -183,7 +183,7 @@ public class Database {
 	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName, String columnCount){
 		
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
-		String addStudentCommand   = "echo \"" + studentID + ":" + fName + ":" + lName + "\" >> " + assignmentsFilePath + " | " +      //TODO FIX THIS COMMAND
+		String addStudentCommand   = "echo \"" + studentID + ":" + fName + ":" + lName + ":" + mName + "\" >> " + assignmentsFilePath + " | " +
 									 "awk -F : '$1==\"" + studentID + "\"{OFS=\":\"; $" + columnCount + "=\" \"}1' " + assignmentsFilePath +
 									 " >> tmp1 && mv tmp1 " + assignmentsFilePath + 
 									 " | sort -t : -k 3 " + assignmentsFilePath + " >> tmp2 && mv tmp2 " + assignmentsFilePath;
@@ -290,7 +290,7 @@ public class Database {
 		
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
 		String updateCommand 	   = "awk -F : '$1==\"" + studentID + 
-				  			   		 "\"{OFS=\":\";$" + String.valueOf(column) + 
+				  			   		 "\"{OFS=\":\";$" + String.valueOf(column - 1) + 
 				  			   		 "=\"" + grade + 
 				  			   		 "\"}1' " + assignmentsFilePath + 
 				  			   		 " > tmp && mv tmp " + assignmentsFilePath;
