@@ -1,0 +1,4 @@
+rm assignments
+cp assignments_cp assignments
+rm assignments_list
+cp assignments_list_cp assignments_list
