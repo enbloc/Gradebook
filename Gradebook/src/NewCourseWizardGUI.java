@@ -1,14 +1,3 @@
-/*
- * NewCourseWizard.java
- * 
- * This is the class that creates the New Course Wizard prompt after 
- * the New Course button is selected on any page. It contains several
- * fields through which the user inputs the necessary data to create 
- * a new course.
- * 
- * Gabriel Miller
- * 10/25/2016
- */
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -26,6 +15,16 @@ import javax.swing.JTextField;
 import constants.Constants;
 import dbclasses.Database;
 
+/**
+ * This is the class that creates the New Course Wizard prompt after 
+ * the New Course button is selected on any page. It contains several
+ * fields through which the user inputs the necessary data to create 
+ * a new course. Upon completion, the course is inserted into the database
+ * and the main Gradebook GUI is updated.
+ * 
+ * @author Gabriel Miller
+ * @version 1.0 10/25/2016
+ */
 public class NewCourseWizardGUI {
 
 	private String  newCourse;
@@ -40,10 +39,22 @@ public class NewCourseWizardGUI {
 	private JRadioButton rbExists;
 	private JComboBox<String> semesters;
 	
-	// Variable to keep track of whether or not course was created
+	/**
+	 * Variable to keep track of whether or not a course was created
+	 */
 	public int COURSE_CREATED = 0;  // 0 == no course created, 1 == course created
+	
+	/**
+	 * Flag to indicate which type of semester the course is being created for:
+	 * 0 == Current Semester, 1 == Old Semester, 2 == New Semester
+	 */
 	public int SEMESTER_TYPE_FLAG = 0; // 0 == Current Semester, 1 == Old Semester, 2 == New Semester
 	
+	/**
+	 * Class constructor that handles the creation and initialization of the interface.
+	 * 
+	 * @param nclw loading window object
+	 */
 	public NewCourseWizardGUI(NewCourseLoadingWindow nclw){
 		
 		mainPanel = new JPanel(new BorderLayout(5,5));
@@ -131,7 +142,10 @@ public class NewCourseWizardGUI {
 	    }
 	}
 	
-	// Getter for the name of the new course 
+	/**
+	 * Getter for the name of the new course 
+	 * @return new course name
+	 */
 	public String getCourseName(){
 		return newCourse;
 	}

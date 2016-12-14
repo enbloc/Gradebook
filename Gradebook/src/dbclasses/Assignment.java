@@ -1,14 +1,11 @@
-/*
- * Assignment.java
- * 
- * This class provides the data model for assignments, as well as the methods to 
- * create, delete, and update the text files that contain their information.
- * 
- * Gabriel Miller
- * 10/25/2016
- */
-package dbclasses;
 
+package dbclasses;
+/**
+ * This class provides the data model for assignments.
+ * 
+ * @author Gabriel Miller
+ * @version 1.0 10/25/2016
+ */
 public class Assignment {
 
 	private String      name;
@@ -22,19 +19,35 @@ public class Assignment {
 	/*
 	 * Getters and Setters
 	 */
-
+	
+	/**
+	 * Getter for assignment name
+	 * @return assignment name
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Setter for assignment name
+	 * @param name assignment name
+	 */
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	/**
+	 * Getter for assignment category
+	 * @return assignment category
+	 */
 	public String getCategory() {
 		return category;
 	}
 
+	/**
+	 * Setter for assignment category
+	 * @param category assignment category
+	 */
 	public void setCategory(String category) {
 		this.category = category;
 	}

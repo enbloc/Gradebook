@@ -1,20 +1,5 @@
-/*
- * NewRubricWizardGUI.java
- * 
- * This is the class that creates the New/Edit Rubric Wizard prompt after 
- * the Edit Rubric button is selected on any page. It is populated with the
- * current list of grade categories (Homework, Quiz, Exam, etc) with their
- * corresponding weights listed as a percent (out of 100). The wizard allows 
- * for these values to be edited, deleted, or created, with the caveat that 
- * all category weights must add up to 100.
- * 
- * Gabriel Miller
- * 11/14/2016
- */
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -39,6 +24,17 @@ import dbclasses.Assignment;
 import dbclasses.Database;
 import dbclasses.GradeCategory;
 
+/**
+ * This is the class that creates the New/Edit Rubric Wizard prompt after 
+ * the Edit Rubric button is selected on any page. It is populated with the
+ * current list of grade categories (Homework, Quiz, Exam, etc) with their
+ * corresponding weights listed as a percent (out of 100). The wizard allows 
+ * for these values to be edited, deleted, or created, with the caveat that 
+ * all category weights must add up to 100.
+ * 
+ * @author Gabriel Miller
+ * @version 1.0 11/14/2016
+ */
 public class NewRubricWizardGUI {
 	
 	private JFrame mainFrame;
@@ -53,9 +49,16 @@ public class NewRubricWizardGUI {
 	private DefaultTableCellRenderer centerRenderer;
 	
 	// Flags
+	/**
+	 * Flag that is set to <code>true</code> if the rubric was changed
+	 * and therefore grades must be recalculated.
+	 */
 	public  boolean RECALCULATE_GRADES = false;
 	private boolean CATEGORY_ADDED = false;
 	
+	/**
+	 * Class constructor that handles the initialization of the wizard interface.
+	 */
 	public NewRubricWizardGUI(){
 		
 		// Initialize Panels
@@ -179,7 +182,12 @@ public class NewRubricWizardGUI {
 	   	}
 	}
 	
-	// Prepare Table
+	/**
+	 * Prepares the small table containing rubric information for the wizard.
+	 * This information is retrieved from the current course's rubric file.
+	 * 
+	 * @return the table model for the rubric wizard
+	 */
 	@SuppressWarnings("serial")
 	private DefaultTableModel prepareTable(){
 		
@@ -230,7 +238,9 @@ public class NewRubricWizardGUI {
 		return tableModel;
 	}
 	
-	// Add another category row to rubric wizard
+	/**
+	 * Adds another category to the rubric wizard.
+	 */
 	private void addCategory(){
 
 		Object[] row = new Object[2];
@@ -245,7 +255,9 @@ public class NewRubricWizardGUI {
 		CATEGORY_ADDED = false;
 	}
 	
-	// Delete a category from rubric wizard
+	/**
+	 * Deletes a category from the rubric wizard.
+	 */
 	private void deleteCategory(){
 		
 		int selectedRow = table.getSelectedRow();
@@ -254,7 +266,9 @@ public class NewRubricWizardGUI {
 		}
 	}
 	
-	// Update the total value when percentage is changed
+	/**
+	 * Update the "Total" value when the percentage is changed.
+	 */
 	private void updateTotal(){
 		
 		if (!CATEGORY_ADDED){

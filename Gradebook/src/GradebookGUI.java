@@ -1,13 +1,3 @@
-/* GradebookGUI.java
- * 
- * Gabriel Miller
- * 10/1/2016
- * 
- * Class file to implement the graphical user interface
- * for the grade book application.
- * 
- */
-
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -46,7 +36,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 import constants.Constants;
@@ -59,6 +48,14 @@ import dbclasses.Student;
 
 import com.jcabi.ssh.Shell;
 
+/**
+ * This class implements the Gradebook graphical user interface, including the layout for 
+ * each of the individal tabs and the methods that create a running instance of the program.
+ * 
+ * @author Gabriel Miller
+ * @version 1.0 10/1/2016
+ * 
+ */
 @SuppressWarnings("serial")
 public class GradebookGUI extends JApplet {
 
@@ -92,19 +89,35 @@ public class GradebookGUI extends JApplet {
 	private boolean	UPDATE_UI    = true;
 	private boolean RUBRIC_INITIALIZED = true;
 	
-	// Static variables
-	static int loadingProgress = 0;
+	/**
+	 * Contains the loading progress in percentage form
+	 */
+	public static int loadingProgress = 0;
 	
-	// GUI Class Constructor
+	/**
+	 * Primary GUI class constructor
+	 */
 	public GradebookGUI(){
 		prepareGUI();
 	}
 	
+	/**
+	 * Main function that calls GradebookGUI constructor
+	 * @param args empty
+	 */
 	public static void main(String[] args) {
 		new GradebookGUI();
 	}
 	
-	// Initialize the GUI elements
+	/**
+	 * <code>prepareGUI</code> method that initializes and sets up the interface for the 
+	 * numerous tabs in Gradebook, as well as the generation of the login interface (which
+	 * must be successfully passed in order to generate the Gradebook GUI. It also performs
+	 * a number of other functions, such as calling methods for loading windows as necessary
+	 * and making calls to the server in order to populate the user interface elements with
+	 * the appropriate data.
+	 * 
+	 */
 	public void prepareGUI(){
 		
 		// Set Look and Feel
@@ -359,10 +372,8 @@ public class GradebookGUI extends JApplet {
 		mainFrame.setVisible(true);
 	}
 
-	/*
-	 * New Course Wizard
-	 * 
-	 * This function runs when the "New Course" button is pressed. It first
+	/**
+	 * Runs when the "New Course" button is pressed. It first
 	 * creates the New Course Wizard window, then takes the user inputs and
 	 * creates a course in the directory. It then adds the new course to the
 	 * course selector combo box in the controls panel, and displays the new
@@ -382,13 +393,17 @@ public class GradebookGUI extends JApplet {
 		}
 	}
 	
-	/*
-	 * Assignment Creation Function
-	 * 
-	 * This function runs when the "New Assignment" button is pressed. It first
+	/**
+	 * Runs when the "New Assignment" button is pressed. It first
 	 * runs the New Assignment Wizard, then takes the user inputs and creates 
 	 * the assignment.txt file in the "Assignments" folder for the course. It then
 	 * updates the current table with the new course.
+	 * 
+	 * Although we can move a column in a JTable after adding it, we cannot do the same 
+	 * with the underlying DefaultTableModel (which only allows you to append columns). 
+	 * Therefore, we have to calculate how many moves we must make to get from the 
+	 * table model to the desired JTable by getting a count of the number of courses 
+	 * that have been added since the last table update, and move columns back accordingly.
 	 * 
 	 */
 	public void createAssignment(){
@@ -438,10 +453,8 @@ public class GradebookGUI extends JApplet {
 		}
 	}
 	
-	/*
-	 * Add Student Function
-	 * 
-	 * This function runs when the "Add Student" button is pressed. It first
+	/**
+	 * Runs when the "Add Student" button is pressed. It first
 	 * runs the New Student Wizard, then takes the user inputs and creates a new 
 	 * line in the "assignments" file on the server. It then updates the table 
 	 * with the new student information.
@@ -476,10 +489,8 @@ public class GradebookGUI extends JApplet {
 		}
 	}
 	
-	/*
-	 * Edit Rubric Function
-	 * 
-	 * This function is called whenever the "Edit Rubric" button is pressed. It runs a 
+	/**
+	 * Runs whenever the "Edit Rubric" button is pressed. It runs a 
 	 * wizard that provides the list of current rubric grade categories (if any) and gives 
 	 * the user the option to edit them or add new categories if they want.
 	 * 
@@ -494,12 +505,11 @@ public class GradebookGUI extends JApplet {
 		}
 	}
 	
-	/*
-	 * Generate Report Function
-	 * 
-	 * This function is called when the "Generate Report" button is pressed. It will generate
+	/**
+	 * Runs when the "Generate Report" button is pressed. It will generate
 	 * a comma-separated text file containing the values of the table that is currently selelected.
 	 * 
+	 * @param table JTable for which the CSV report will be generated
 	 */
 	public void generateReport(JTable table){
 		JFileChooser fileChooser = new JFileChooser();	
@@ -544,10 +554,9 @@ public class GradebookGUI extends JApplet {
 		}
 	}
 	
-	/*
-	 * prepareTable()
+	/**
 	 * 
-	 * Retrieve and initialize the values for the Gradebook table.
+	 * Retrieves and initializes the values for the Gradebook table.
 	 * 
 	 * These values are retrieved by querying the "assignments" file in the database
 	 * directory (which contains student names, ID numbers, and grades) and parsing the 
@@ -555,6 +564,13 @@ public class GradebookGUI extends JApplet {
 	 * from the "assignments_list" file (which contains a list of the assignment names) 
 	 * are then mapped to the DefaultTableModel which can then be applied to the JTable.
 	 * 
+	 * @param semester the semester for which the table is being prepared
+	 * @param course the course for which the table is being prepared
+	 * @param ARCHIVE_TABLE flag that designates whether the table being created is for the archive tab or not. If <code>true</code>, then 
+	 * 		  the entire table will be set to uneditable. Otherwise if <code>false</code>, just the appropriate columns and rows will be
+	 * 		  set to be uneditable.
+	 * 
+	 * @return the DefaultTableModel containing the data for the new course table
 	 */
 	public DefaultTableModel prepareTable(String semester, String course, boolean ARCHIVE_TABLE){
 		
@@ -712,13 +728,16 @@ public class GradebookGUI extends JApplet {
 		return tableModel;
 	}
 	
-	/*
-	 * Get Row Averages
-	 * 
-	 * Get the student average for each assignment based on the grades entered and 
-	 * instantiate a column object containing the values to be placed at the right
+	/**
+	 * Gets the student average for each assignment based on the grades entered and 
+	 * instantiates a column object containing the values to be placed at the right
 	 * of the table.
 	 * 
+	 *  @param model the DefaultTableModel for the course table being calculated 
+	 *  @param IS_RECALC flag to declare whether or not the table is being generated for the first time or
+	 *  	   if it is being recalculated after a grade update. This is important for determing the column count.
+	 *  
+	 *  @return an array containing the average grades for each of the students in the current gradebook
 	 */
 	public Object[] getRowAverages(DefaultTableModel model, boolean IS_RECALC){
 		
@@ -817,13 +836,16 @@ public class GradebookGUI extends JApplet {
 		return column;	
 	}
 	
-	/*
-	 * Get Column Averages
-	 * 
-	 * Get the class average for each assignment based on the grades entered and 
-	 * instantiate a row object containing the values to be placed at the bottom
+	/**
+	 * Gets the class average for each assignment based on the grades entered and 
+	 * instantiates a row object containing the values to be placed at the bottom
 	 * of the table.
 	 * 
+	 * @param model the DefaultTableModel for the course table being calculated 
+	 * @param IS_RECALC flag to declare whether or not the table is being generated for the first time or
+	 *   	  if it is being recalculated after a grade update. This is important for determing the row count.
+	 *  
+	 * @return array containing the average grades for each column
 	 */
 	public Object[] getColumnAverages(DefaultTableModel model, boolean IS_RECALC){
 		
@@ -883,12 +905,12 @@ public class GradebookGUI extends JApplet {
 		return row;	
 	}
 	
-	/*
-	 * Get Letter Grades
-	 * 
+	/**
 	 * This function takes the individual student averages and converts them to
 	 * letter grades, based on the information contained in the gradescheme file.
 	 * 
+	 * @param averages the column of grade averages to be converted into letter grades
+	 * @return array containing letter grades
 	 */
 	public Object[] getLetterGrades(Object[] averages){
 		
@@ -904,12 +926,11 @@ public class GradebookGUI extends JApplet {
 		return letterGrades;
 	}
 	
-	/*
-	 * Prepare the Course Selector JComboBox
-	 * 
-	 * This function populates the Course Selector Combo Box by pulling the 
+	/**
+	 * Populates the Course Selector Combo Box by pulling the 
 	 * course names from the current semester as specified by the user settings.
-	 *  
+	 * 
+	 *  @return the DefaultComboBoxModel containing the course names for the current semester 
 	 */
 	public DefaultComboBoxModel<String> prepareCourseSelector(){
 		// Prepare Course Selector Box
@@ -925,14 +946,16 @@ public class GradebookGUI extends JApplet {
 		return dcbm;
 	}
 	
-	/*
-	 * Update Student Grade
+	/**
+	 * Responds to the changing of a grade value in the Gradebook table.
 	 * 
-	 * This function responds to the changing of a grade value in the Gradebook table.
 	 * This is achieved by performing the necessary table recalculations (such as averages
 	 * and course grades) while the grade is updated on the server using a separate thread
 	 * in order to avoid the overhead of an SSH call.
 	 * 
+	 * @param dtm the DefaultTableModel that represents the current course table being updated
+	 * @param e the TableModelEvent that triggers the <code>updateGrade</code> method
+	 * @param course the currently selected course for which the grade is being updated 
 	 */
 	public void updateGrade(DefaultTableModel dtm, TableModelEvent e, String course){
 
@@ -992,11 +1015,11 @@ public class GradebookGUI extends JApplet {
         }
 	}
 	
-	/*
-	 * Prepare Rubric Panel
-	 * 
-	 * Set all of the labels for the rubric panel as per 
+	/**
+	 * Sets all of the labels for the rubric panel as per 
 	 * the data stored on the rubric server file.
+	 * 
+	 * @param course the current course for which the rubric should be pulled
 	 * 
 	 */
 	public void prepareRubricPanel(String course){
@@ -1033,15 +1056,4 @@ public class GradebookGUI extends JApplet {
 		coursesRubricPanel.add(editRubricBtn);
 		coursesRubricPanel.add(coursesReportBtn);
 	}
-	
-	// Code to create tabbed section
-	protected Component makeTextPanel(String text) {
-	    JPanel panel = new JPanel(false);
-	    JLabel filler = new JLabel(text);
-	    filler.setHorizontalAlignment(JLabel.CENTER);
-	    panel.setLayout(new GridLayout(1, 1));
-	    panel.add(filler);
-	    return panel;
-	}
-
 }

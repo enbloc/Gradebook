@@ -1,14 +1,3 @@
-/*
- * NewStudentWizard.java
- * 
- * This is the class that creates the New Student Wizard prompt after 
- * the "Add Student" button is selected on any page. It contains several
- * fields through which the user inputs the necessary data to create 
- * a new student.
- * 
- * Gabriel Miller
- * 10/25/2016
- */
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -23,6 +12,16 @@ import javax.swing.SwingConstants;
 import constants.Global;
 import dbclasses.Database;
 
+/**
+ * This is the class that creates the New Student Wizard prompt after 
+ * the "Add Student" button is selected on any page. It contains several
+ * fields through which the user inputs the necessary data to create 
+ * a new student. Upon completion of the form, the new student is inserted
+ * into the database and the main Gradebook GUI is updated.
+ * 
+ * @author Gabriel Miller
+ * @version 1.0 10/25/2016
+ */
 public class NewStudentWizardGUI {
 
 	private String studentID;
@@ -32,9 +31,22 @@ public class NewStudentWizardGUI {
 	private JPanel labels;
 	private JPanel controls;
 
-	// Variable to keep track of whether or not student was created
+	/**
+	 * Flag to keep track of whether or not a student was added.
+	 */
 	public int STUDENT_CREATED = 0;  // 0 == no student created, 1 == student created
 	
+	/**
+	 * Class constructor that initializes the interface.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 * @param columnCount number of columns currently in the database file so that the 
+	 * 		  entry may be formatted correctly
+	 * @param STUDENT_INFO_EMPTY flag that is set to true if this instance of the student
+	 * 		  creation wizard is being recalled because of empty fields so that the appropriate
+	 * 		  error message can be displayed
+	 */
 	public NewStudentWizardGUI(String semester, String course, String columnCount, boolean STUDENT_INFO_EMPTY){
 		
 		mainPanel = new JPanel(new BorderLayout());
@@ -100,22 +112,34 @@ public class NewStudentWizardGUI {
 	/*
 	 * Getters and Setters
 	 */
-	
+	/**
+	 * Getter for student ID
+	 * @return student ID
+	 */
 	public String getStudentID() {
 		return studentID;
 	}
 
-
+	/**
+	 * Setter for student ID
+	 * @param studentID student ID
+	 */
 	public void setStudentID(String studentID) {
 		this.studentID = studentID;
 	}
 
-
+	/**
+	 * Getter for student name
+	 * @return student name
+	 */
 	public String getStudentName() {
 		return studentName;
 	}
 
-
+	/**
+	 * Setter for student name
+	 * @param studentName student name
+	 */
 	public void setStudentName(String studentName) {
 		this.studentName = studentName;
 	}

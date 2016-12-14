@@ -1,12 +1,3 @@
-/*
- * LoginGUI.java
- * 
- * This is the class for the Login GUI.
- * 
- * Gabriel Miller
- * 10/31/2016
- */
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -25,6 +16,16 @@ import constants.Constants;
 
 import com.jcabi.ssh.SSHByPassword;
 
+/**
+ * Class that creates the GUI and handles the logic for the login screen.
+ * It uses an SSH shell to take the entered username and password and attempt
+ * to log in to Storm using these credentials. If successful, the main Gradebook
+ * GUI is prepared and initialized.
+ * 
+ * @author Gabriel Miller
+ * @version 1.0 10/31/2016
+ *
+ */
 public class LoginGUI {
 
 	// Variable that tracks login status
@@ -32,6 +33,16 @@ public class LoginGUI {
 	boolean LOGIN_INFO_EMPTY  = false;
 	boolean LOGIN_AUTH_FAILED = false;
 	
+	/**
+	 * Class constructor that creates the interface.
+	 * 
+	 * @param frame the parent frame
+	 * @param loadingWindow the LoadingWindow object that is instantiated after a login attempt
+	 * @param LOGIN_INFO_EMPTY flag that is set to <code>true</code> if this object is being recalled 
+	 * 		  after a login attempt with one or more empty fields, so that an error can be displayed
+	 * @param LOGIN_AUTH_FAILED flag that is set to <code>true</code> if this object is being recalled
+	 * 		  after a login attempt has failed due to invalid credentials so that an error can be displayed
+	 */
     public LoginGUI(JFrame frame, LoadingWindow loadingWindow, boolean LOGIN_INFO_EMPTY, boolean LOGIN_AUTH_FAILED) {
     	this.LOGIN_INFO_EMPTY  = LOGIN_INFO_EMPTY;
     	this.LOGIN_AUTH_FAILED = LOGIN_AUTH_FAILED;
@@ -91,8 +102,8 @@ public class LoginGUI {
 	    }
     }
     
-    /*
-     * SSH Login Function
+    /**
+     * SSH Login Function.
      * 
      * Attempts to log in via SSH to the specified domain and port number
      * in the Constants class using the username and password entered by
@@ -100,6 +111,8 @@ public class LoginGUI {
      * UnknownHostException, authentication failure, or otherwise, the 
      * function will return LOGIN_SUCCESS = false. Otherwise, it will 
      * return true.
+     * 
+     * @return whether or not the login attempt was successful
      */
     private boolean sshLogin(){
     	boolean LOGGED_IN = false;

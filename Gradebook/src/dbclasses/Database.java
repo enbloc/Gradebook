@@ -1,4 +1,14 @@
-/*
+package dbclasses;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.jcabi.ssh.Shell;
+
+import constants.Constants;
+import threads.GradeUpdateThread;
+/**
  * Database.java
  * 
  * This class handles all of the operations necessary to handle the creation, insertion,
@@ -6,6 +16,12 @@
  * This includes the above methods as they pertain to semesters, courses, assignments, rubrics,
  * students, and individual grades. 
  * 
+ * @author Gabriel Miller
+ * @version 1.0
+ * @since 10/15/2016
+ * 
+ */
+/*
  * The directory structure is as follows:
  * 
  * 	User Folder
@@ -23,22 +39,14 @@
  *                                --> assignments_list	(contains list of assignment names)
  *                                --> attendance		(contains list of student IDs and attendance record)	 
  */
-package dbclasses;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.jcabi.ssh.Shell;
-
-import constants.Constants;
-import threads.GradeUpdateThread;
-
 public class Database {
 	
 	// Class to assist with directory/file path construction
 	DatabasePathBuilder PathBuilder;
 	
+	/**
+	 * Class constructor that creates a DatabasePathBuilder.
+	 */
 	public Database(){
 		PathBuilder = new DatabasePathBuilder();
 	}
@@ -48,6 +56,11 @@ public class Database {
 	 */
 	
 	// Create a new semester under the user directory
+	/**
+	 * Creates a new semester under the user directory.
+	 * 
+	 * @param semester current semester
+	 */
 	public void createSemesterFolder(String semester){
 		
 		String semesterFolderPath = PathBuilder.buildPath(semester);
@@ -59,7 +72,11 @@ public class Database {
 		}
 	}
 	
-	// Delete semester directory
+	/**
+	 * Deletes the semester directory.
+	 * 
+	 * @param semester current semester
+	 */
 	public void deleteSemester(String semester){
 		
 		String semesterFolderPath = PathBuilder.buildPath(semester);
@@ -71,7 +88,11 @@ public class Database {
 		}
 	}
 	
-	// Get list of semesters under the user directory
+	/**
+	 * Gets list of semesters under the current user directory
+	 * 
+	 * @return array of semester names
+	 */
 	public String[] getSemesters(){
 		String semesters[] = null;
 		String rawSemesters[] = null;
@@ -93,8 +114,12 @@ public class Database {
 	 * Course Methods
 	 */
 	
-	// Create the course folder, as well as the necessary files and folders
-	// TODO ADAPT TO NEW FORM
+	/**
+	 * Creates the course folder, as well as all subordinate files and folders.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 */
 	public void createCourseFolder(String semester, String course){
 		
 		// Create the course directory under the semester folder
@@ -117,7 +142,13 @@ public class Database {
 		// TODO createAttendanceFile(semester, course);
 	}
 	
-	// Get course data for the preparation of course table
+	/**
+	 * Gets course data for preparation of the course table
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 * @return array of lines from the "assignments" file, not yet parsed
+	 */
 	public String[] getCourseData(String semester, String course){
 		
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
@@ -134,7 +165,12 @@ public class Database {
 		return courseData;
 	}
 	
-	// Delete directory with course name
+	/**
+	 * Deletes directory with the given course name.
+	 * 
+	 * @param semester current semester
+	 * @param course course to be deleted
+	 */
 	public void deleteCourse(String semester, String course){
 		
 		String courseFolderPath = PathBuilder.buildPath(semester, course);
@@ -146,7 +182,12 @@ public class Database {
 		}
 	}
 	
-	// Get all courses under the semester directory
+	/**
+	 * Gets all courses under the current semester directory.
+	 * 
+	 * @param semester current semester
+	 * @return array of course names in the current semester
+	 */
 	public String[] getCourses(String semester){
 		
 		String semesterFolderPath = PathBuilder.buildPath(semester);
@@ -170,7 +211,12 @@ public class Database {
 	 * Student Methods
 	 */
 	
-	// Create the students.txt file and populate it with class roster
+	/**
+	 * Creates the "students" file and populate it with the class roster.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 */
 	public void createStudentsList(String semester, String course){
 		// TODO Populate students file with roster list
 		String studentsFilePath = PathBuilder.buildPath(semester, course, "students");
@@ -182,7 +228,19 @@ public class Database {
 		}
 	}
 	
-	// Add a student to the directory
+	/**
+	 * Adds a student to the directory.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 * @param studentID unique ID for the student
+	 * @param fName student first name
+	 * @param lName student last name
+	 * @param mName student middle name
+	 * @param columnCount number of columns in the "assignments" file
+	 * @param NEW_COURSE flag that is set to true if the course to which the student is being added is a new course
+	 * 
+	 */
 	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName, String columnCount, boolean NEW_COURSE){
 		
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
@@ -203,15 +261,28 @@ public class Database {
 		gut1.start();
 	}
 	
+	/**
+	 * Deletes a student from the directory (unimplemented).
+	 */
 	public void deleteStudent(){
 		// TODO Delete a student from the directory
 	}
 	
+	/**
+	 * Updates a student's information in the "assignments" file (unimplemented).
+	 */
 	public void updateStudent(){
 		// TODO Update a student's information in the directory
 	}
 	
-	// Get the list of students in the course
+	
+	/**
+	 * Gets the list of students in the specified course.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 * @return list of students enrolled in the current course
+	 */
 	public List<Student> getStudents(String semester, String course){
 		
 		List<Student> students  = new ArrayList<Student>();
@@ -240,7 +311,12 @@ public class Database {
 	 * Assignment Methods
 	 */
 	
-	// Create directory for assignments in Course folder
+	/**
+	 * Create "assignments" and "assignments_list" files in the current course directory.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 */
 	public void createAssignmentFiles(String semester, String course){
 		
 		String assignmentsFilePath 	   = PathBuilder.buildPath(semester, course, "assignments");
@@ -254,7 +330,14 @@ public class Database {
 		}
 	}
 	
-	// Add an assignment to the assignment directory
+	/**
+	 * Add an assignment to both the "assignments" file and the "assignments_list" file.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 * @param assignment assignment name
+	 * @param category assignment category
+	 */
 	public void addAssignment(String semester, String course, String assignment, String category){
 
 		String assignmentsFilePath 	   = PathBuilder.buildPath(semester, course, "assignments");
@@ -268,11 +351,20 @@ public class Database {
 		gut2.start();
 	}
 	
+	/**
+	 * Delete an assignment from the assignment files (unimplemented).
+	 */
 	public void deleteAssignment(){
 		// TODO Delete an assignment from the assignment directory
 	}
 	
-	// Get the list of assignments in the course
+	/**
+	 * Get the list of assignments in the specified course.
+	 * 
+	 * @param semester current semester
+	 * @param course current course 
+	 * @return list of assignments in the specified course
+	 */
 	public List<Assignment> getAssignmentList(String semester, String course){
 		
 		List<Assignment> assignments   = new ArrayList<Assignment>(); 
@@ -296,7 +388,15 @@ public class Database {
 		return assignments;
 	}
 	
-	// Update grade of a student when the information is changed
+	/**
+	 * Updates the grade of a student when the information changes.
+	 *  
+	 * @param semester current semester
+	 * @param course current course
+	 * @param studentID student ID
+	 * @param column the specific column for which the student info must be updated
+	 * @param grade the new grade 
+	 */
 	public void updateGrade(String semester, String course, String studentID, int column, String grade){
 		
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
@@ -314,7 +414,12 @@ public class Database {
 	 * Rubric Methods
 	 */
 	
-	// Create the rubric.txt file and populate it with configurations
+	/**
+	 * Create a rubric file for the specified course.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 */
 	public void createRubric(String semester, String course){
 		// TODO Populate rubric file with configs
 		String rubricFilePath = PathBuilder.buildPath(semester, course, "rubric");
@@ -326,7 +431,13 @@ public class Database {
 		}
 	}
 	
-	// Update the rubric file when adjustments are made
+	/**
+	 * Update the rubric file when adjustments are made.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 * @param newGcs list of grade categories that will be used to update the rubric file
+	 */
 	public void updateRubric(String semester, String course, List<GradeCategory> newGcs){
 		
 		String rubricFilePath = PathBuilder.buildPath(semester, course, "rubric");
@@ -343,7 +454,13 @@ public class Database {
 		gut.start();
 	}
 	
-	// Get course rubric information
+	/**
+	 * Gets course rubric information.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 * @return list of grade category objects that 
+	 */
 	public List<GradeCategory> getRubric(String semester, String course){
 		
 		String rubricData[] 				= null;
@@ -371,7 +488,12 @@ public class Database {
 	 * Grade Scheme Methods
 	 */
 	
-	// Create grade scheme file in the course directory
+	/**
+	 * Creates grade scheme file in the specified course directory.
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 */
 	public void createGradeScheme(String semester, String course){
 		// TODO Populate scheme file with configs
 		String schemeFilePath = PathBuilder.buildPath(semester, course, "gradescheme");
@@ -384,12 +506,22 @@ public class Database {
 		}
 	}
 	
-	// Update grade scheme file with new configurations
+	/**
+	 * Update grade scheme file with new configurations (unimplemented).
+	 * 
+	 * @param semester current semester
+	 * @param course current course
+	 */
 	public void updateGradeScheme(String semester, String course){
 		
 	}
 	
-	// Retrieve the grade scheme as a list of GradeRanges
+	/**
+	 * Retrieves the grade scheme as a list of grade ranges.
+	 * @param semester current semester
+	 * @param course current course
+	 * @return list of grade range objects generated from the grade scheme file
+	 */
 	public List<GradeRange> getGradeScheme(String semester, String course){
 		String schemeData[] 				= null;
 		String schemeFilePath 				= PathBuilder.buildPath(semester, course, "gradescheme");
@@ -411,9 +543,5 @@ public class Database {
 		}
 		return gradeRanges;
 	}
-	
-	
-	
-	
 	
 }
