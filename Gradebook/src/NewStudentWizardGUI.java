@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import constants.Global;
 import dbclasses.Database;
 
 public class NewStudentWizardGUI {
@@ -31,6 +32,8 @@ public class NewStudentWizardGUI {
 	private JPanel labels;
 	private JPanel controls;
 
+	// Variable to keep track of whether or not student was created
+	public int STUDENT_CREATED = 0;  // 0 == no student created, 1 == student created
 	
 	public NewStudentWizardGUI(String semester, String course, String columnCount, boolean STUDENT_INFO_EMPTY){
 		
@@ -75,6 +78,7 @@ public class NewStudentWizardGUI {
 	    		    lName.getText().isEmpty()) {
 	    		new NewStudentWizardGUI(semester, course, columnCount, true);
 	    	} else {
+	    		System.out.println("STUDENT NAME: " + fName.getText() + " " + mName.getText() + " " + lName.getText());
 	    		Database db = new Database();
 	    		db.addStudent(semester, 
 	    					  course, 
@@ -82,12 +86,13 @@ public class NewStudentWizardGUI {
 	    					  fName.getText(),
 	    					  lName.getText(),
 	    					  mName.getText(), 
-	    					  columnCount);
+	    					  columnCount,
+	    					  Global.IS_NEW_COURSE);
 	    		this.setStudentID(studentID.getText());
 	    		this.setStudentName(lName.getText() + ", " +
 	    				            fName.getText() + " "  + 
 	    							mName.getText());
-	    		
+	    		STUDENT_CREATED = 1;
 	    	}
 	    }
 	}

@@ -74,11 +74,13 @@ public class Database {
 	// Get list of semesters under the user directory
 	public String[] getSemesters(){
 		String semesters[] = null;
+		String rawSemesters[] = null;
 		try {
 			String semesterData = new Shell.Plain(Constants.shell).exec("ls " + Constants.directory);
-			semesters = semesterData.split("[\\r\\n]+");
-			for (String semester : semesters){
-				semester.replace("_", " ");
+			rawSemesters = semesterData.split("[\\r\\n]+");
+			semesters = new String[rawSemesters.length];
+			for (int i = 0; i < rawSemesters.length; i++){
+				semesters[i] = rawSemesters[i].replace("_", " ");
 			}
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
@@ -111,6 +113,7 @@ public class Database {
 		createStudentsList(semester, course);
 		createRubric(semester, course);
 		createAssignmentFiles(semester, course);
+		createGradeScheme(semester, course);
 		// TODO createAttendanceFile(semester, course);
 	}
 	
@@ -180,13 +183,21 @@ public class Database {
 	}
 	
 	// Add a student to the directory
-	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName, String columnCount){
+	public void addStudent(String semester, String course, String studentID, String fName, String lName, String mName, String columnCount, boolean NEW_COURSE){
 		
 		String assignmentsFilePath = PathBuilder.buildPath(semester, course, "assignments");
-		String addStudentCommand   = "echo \"" + studentID + ":" + fName + ":" + lName + ":" + mName + "\" >> " + assignmentsFilePath + " | " +
-									 "awk -F : '$1==\"" + studentID + "\"{OFS=\":\"; $" + columnCount + "=\" \"}1' " + assignmentsFilePath +
-									 " >> tmp1 && mv tmp1 " + assignmentsFilePath + 
-									 " | sort -t : -k 3 " + assignmentsFilePath + " >> tmp2 && mv tmp2 " + assignmentsFilePath;
+		String addStudentCommand = null;
+		if (NEW_COURSE){
+			addStudentCommand   = "echo \"" + studentID + ":" + fName + ":" + lName + ":" + mName + "\" >> " + assignmentsFilePath + //" | " +
+										 //"awk -F : '$1==\"" + studentID + "\"{OFS=\":\"; $" + columnCount + "=\" \"}1' " + assignmentsFilePath +
+										 //" >> tmp1 && mv tmp1 " + assignmentsFilePath + 
+										 " | sort -t : -k 3 " + assignmentsFilePath + " >> tmp2 && mv tmp2 " + assignmentsFilePath;
+		} else {
+			addStudentCommand = "echo \"" + studentID + ":" + fName + ":" + lName + ":" + mName + "\" >> " + assignmentsFilePath + " | " +
+								"awk -F : '$1==\"" + studentID + "\"{OFS=\":\"; $" + columnCount + "=\" \"}1' " + assignmentsFilePath +
+								" >> tmp1 && mv tmp1 " + assignmentsFilePath + 
+					 			" | sort -t : -k 3 " + assignmentsFilePath + " >> tmp2 && mv tmp2 " + assignmentsFilePath;
+		}
 		
 		GradeUpdateThread gut1 = new GradeUpdateThread("gut1", addStudentCommand);
 		gut1.start();
@@ -315,8 +326,21 @@ public class Database {
 		}
 	}
 	
-	public void updateRubric(){
-		// TODO Update the rubric file when adjustments are made
+	// Update the rubric file when adjustments are made
+	public void updateRubric(String semester, String course, List<GradeCategory> newGcs){
+		
+		String rubricFilePath = PathBuilder.buildPath(semester, course, "rubric");
+		String dataString     = new String();
+		
+		for (GradeCategory gc : newGcs){
+			dataString = dataString.concat(
+					gc.getCategory() + ":" + 
+							String.valueOf((int)(gc.getWeight() * 100)) + "\n");
+		}
+		
+		String command = "echo \"" + dataString + "\" > " + rubricFilePath;
+		GradeUpdateThread gut = new GradeUpdateThread("gut", command);
+		gut.start();
 	}
 	
 	// Get course rubric information
@@ -351,8 +375,9 @@ public class Database {
 	public void createGradeScheme(String semester, String course){
 		// TODO Populate scheme file with configs
 		String schemeFilePath = PathBuilder.buildPath(semester, course, "gradescheme");
+		String gradeSchemeInfo = "A:100:94\nA-:93.99:90\nB+:89.99:87\nB:86.99:84\nB-:83.99:80\nC+:79.99:77\nC:76.99:74\nC-:73.99:70\nF:69.99:0";
 		try {
-			new Shell.Plain(Constants.shell).exec("touch " + schemeFilePath);
+			new Shell.Plain(Constants.shell).exec("echo \"" + gradeSchemeInfo + "\" >> " + schemeFilePath);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

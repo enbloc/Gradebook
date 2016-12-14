@@ -13,6 +13,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -23,6 +24,7 @@ import javax.swing.SwingConstants;
 import constants.Global;
 import dbclasses.Assignment;
 import dbclasses.Database;
+import dbclasses.GradeCategory;
 
 public class NewAssignmentWizardGUI {
 
@@ -31,6 +33,7 @@ public class NewAssignmentWizardGUI {
 	private JPanel  mainPanel;
 	private JPanel  labels;
 	private JPanel  controls;
+	private JComboBox<String> category;
 	
 	// Variable to keep track of whether or not course was created
 	public int ASSIGNMENT_CREATED = 0;  // 0 == no course created, 1 == course created
@@ -49,7 +52,8 @@ public class NewAssignmentWizardGUI {
         // Set up text fields and label on the right
         controls = new JPanel(new GridLayout(0,1,2,2));
         JTextField assignment = new JTextField();
-        JTextField category   = new JTextField();
+        category   = new JComboBox<String>();
+        prepareCategories();
         JLabel warning = new JLabel();
         warning.setForeground(Color.RED);
         controls.add(assignment);
@@ -68,22 +72,30 @@ public class NewAssignmentWizardGUI {
         // Handle assignment creation
 	    if (result == JOptionPane.OK_OPTION) {
 	    	if (assignment.getText().isEmpty() || 
-	    		  category.getText().isEmpty()) {
+	    		category.getSelectedItem().toString().isEmpty()) {
 	    			new NewAssignmentWizardGUI(semester, course, true);
 	    	} else {
 	    		Global.assignments.add(new Assignment(assignment.getText(),
-	    											       category.getText()));
+	    											  category.getSelectedItem().toString()));
 	    		Database db = new Database();
     			db.addAssignment(semester, 
     							 course, 
     							 assignment.getText(), 
-    							 category.getText());
+    							 category.getSelectedItem().toString());
     			newAssignment = assignment.getText();
     			ASSIGNMENT_CREATED = 1;
 	    	}
 	    }
 	}
 
+	// Prepare combo box for the category selector
+	public void prepareCategories(){
+		for (GradeCategory gc : Global.gradeCategories){
+			category.addItem(gc.getCategory());
+		}
+	}
+	
+	
 	public String getNewAssignment() {
 		return newAssignment;
 	}

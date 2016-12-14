@@ -22,6 +22,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+
+import constants.Constants;
 import dbclasses.Database;
 
 public class NewCourseWizardGUI {
@@ -40,8 +42,9 @@ public class NewCourseWizardGUI {
 	
 	// Variable to keep track of whether or not course was created
 	public int COURSE_CREATED = 0;  // 0 == no course created, 1 == course created
+	public int SEMESTER_TYPE_FLAG = 0; // 0 == Current Semester, 1 == Old Semester, 2 == New Semester
 	
-	public NewCourseWizardGUI(){
+	public NewCourseWizardGUI(NewCourseLoadingWindow nclw){
 		
 		mainPanel = new JPanel(new BorderLayout(5,5));
 
@@ -104,13 +107,20 @@ public class NewCourseWizardGUI {
 	    if (result == JOptionPane.OK_OPTION) {
 	    	if (semesterField.getText() != null &&
 	    		  courseField.getText() != null	){
+	    			nclw.displayWindow();
 	    		    newCourse = courseField.getText();
 	    			if (rbNew.isSelected()){
 	    				db.createSemesterFolder(semesterField.getText());
 	    				db.createCourseFolder  (semesterField.getText(), newCourse);
+	    				SEMESTER_TYPE_FLAG = 1;
 	    				COURSE_CREATED = 1;
 	    			} else if (rbExists.isSelected()) {
 	    				db.createCourseFolder(semesters.getSelectedItem().toString(), newCourse);
+	    				if (semesters.getSelectedItem().toString().equals(Constants.defaultSemester)){
+	    					SEMESTER_TYPE_FLAG = 0;
+	    				} else {
+	    					SEMESTER_TYPE_FLAG = 2;
+	    				}
 	    				COURSE_CREATED = 1;
 	    			} else {
 	    				// TODO Error catch

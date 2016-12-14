@@ -23,8 +23,9 @@ import dbclasses.GradeRange;
 public class Global {
 
 	// State Dependent Data Holders
+	public static String				currentCourse;			// Contains the course that is currently selected on the Course Tab
 	public static List<Assignment>		assignments;			// Contains the list of assignments for the current course with their corresponding grade categories
 	public static List<GradeCategory> 	gradeCategories;		// Contains the list of grade categories with associated assignments for current course
 	public static List<GradeRange> 		gradeRanges;			// Contains the list of letter grade ranges for the current course that are used to populate the "Grade" column
-	
+	public static boolean				IS_NEW_COURSE = true;
 }

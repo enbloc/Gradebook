@@ -9,6 +9,7 @@
  */
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -16,6 +17,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JApplet;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -33,12 +37,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.ProgressMonitor;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import constants.Constants;
 import constants.Global;
@@ -57,19 +66,21 @@ public class GradebookGUI extends JApplet {
 	private JFrame 				mainFrame;
 	private JTabbedPane 		tabbedPane;
 	private JPanel 				coursesTab;
-	private JPanel 				reportsTab;
 	private JPanel 				archiveTab;
-	private JPanel 				statisticsTab;
-	private JPanel				settingsTab;
 	private JPanel 				coursesControlPanel;
 	private JPanel				coursesRubricPanel;
 	private JPanel 				coursesTablePanel;
+	private JPanel 				archivePanel1;
+	private JPanel 				archivePanel2;
 	private JTable 				coursesTable;
+	private JTable				archiveTable;
 	private JScrollPane 		coursesTableContainer;
+	private JScrollPane			archiveTableContainer;
 	private JButton				newAssignmentBtn;
 	private JButton				newCourseBtn;
 	private JButton				addStudentBtn;
 	private JButton				editRubricBtn;
+	private JButton				coursesReportBtn;
 	private JComboBox<String> 	courseSelector;
 	private DefaultTableModel   tableModel;
 	private DefaultComboBoxModel<String> dcbm;
@@ -79,6 +90,7 @@ public class GradebookGUI extends JApplet {
 	private int     ASSIGNMENTS_ADDED = 0;
 	private int 	STUDENTS_ADDED = 0;
 	private boolean	UPDATE_UI    = true;
+	private boolean RUBRIC_INITIALIZED = true;
 	
 	// Static variables
 	static int loadingProgress = 0;
@@ -93,10 +105,28 @@ public class GradebookGUI extends JApplet {
 	}
 	
 	// Initialize the GUI elements
-	private void prepareGUI(){
+	public void prepareGUI(){
+		
+		// Set Look and Feel
+		try {
+			UIManager.setLookAndFeel("com.jtattoo.plaf.smart.SmartLookAndFeel");
+		} catch (ClassNotFoundException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		} catch (InstantiationException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		} catch (IllegalAccessException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		} catch (UnsupportedLookAndFeelException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		
 		// Initialize the main window
 		mainFrame = new JFrame("Gradebook");
+		mainFrame.setMinimumSize(new Dimension(900, 700));
 		mainFrame.setExtendedState(JFrame.MAXIMIZED_BOTH); 
 		//mainFrame.setUndecorated(true);
 		mainFrame.addWindowListener(new WindowAdapter() {
@@ -163,8 +193,32 @@ public class GradebookGUI extends JApplet {
 		courseSelector.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) { 
 				if (e.getID() == 1001){
-					DefaultTableModel dataModel = prepareTable(courseSelector.getSelectedItem().toString());
+					Global.currentCourse = courseSelector.getSelectedItem().toString();
+					DefaultTableModel dataModel = prepareTable(Constants.defaultSemester, courseSelector.getSelectedItem().toString(), false);
 					coursesTable.setModel(dataModel); 
+					
+					// Center the values of the table
+					DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+					centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+					for (int i = 0; i < tableModel.getColumnCount(); i++ ){
+						if (i != 1){ 	// Do not center name column
+							coursesTable.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+						}
+					}
+					
+					prepareRubricPanel(Global.currentCourse);
+					if (coursesTable.getColumnName(coursesTable.getComponentCount() - 1) == "Grade"|| 
+						coursesTable.getColumnCount() > 2	){
+						Global.IS_NEW_COURSE = false;
+					} else {
+						Global.IS_NEW_COURSE = true;
+					}
+					
+					if (!RUBRIC_INITIALIZED){
+						newAssignmentBtn.setEnabled(false);
+					} else {
+						newAssignmentBtn.setEnabled(true);
+					}
 				}
 			  } 
 		});
@@ -192,7 +246,7 @@ public class GradebookGUI extends JApplet {
 		
 		// Close LoadingWindow
 		loadingWindow.closeWindow();
-		
+				
 		// Course Table Panel
 		coursesTablePanel = new JPanel();
 		coursesTablePanel.setLayout(new GridLayout(1,1));
@@ -200,7 +254,7 @@ public class GradebookGUI extends JApplet {
 		coursesTableContainer = new JScrollPane(coursesTable);
 		coursesTablePanel.add(coursesTableContainer);
 		coursesTablePanel.setBorder(coursesTableTitle);
-		coursesTable.setModel(prepareTable(courseSelector.getSelectedItem().toString()));
+		coursesTable.setModel(prepareTable(Constants.defaultSemester, courseSelector.getSelectedItem().toString(), false));
 		
 		// Center the values of the table
 		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
@@ -220,39 +274,91 @@ public class GradebookGUI extends JApplet {
 		courseTabWrapper.add(coursesTab);
 		tabbedPane.addTab("Courses", null, courseTabWrapper, "Tooltip for the Courses Panel");
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
-		
-		/*
-		 * Reports Panel Setup
-		 */
-		reportsTab = (JPanel) makeTextPanel("Reports Panel");
-		tabbedPane.addTab("Reports", null, reportsTab, "Tooltip for the Reports Panel");
-		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+
 		
 		/*
 		 * Archive Panel Setup
 		 */
-		archiveTab = (JPanel) makeTextPanel("Archive Panel");
-		tabbedPane.addTab("Archive", null, archiveTab, "Tooltip for the Archive Panel");
-		tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
-		
-		/*
-		 * Statistics Panel Setup
-		 */
-		statisticsTab = (JPanel) makeTextPanel("Statistics Panel");
-		tabbedPane.addTab("Statistics", null, statisticsTab, "Tooltip for the Statistics Panel");
-		tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
-		
-		/*
-		 * Settings Panel Setup
-		 */
-		settingsTab = (JPanel) makeTextPanel("Settings Panel");
-		tabbedPane.addTab("Settings", null, settingsTab, "Tooltip for the Settings Panel");
-		tabbedPane.setMnemonicAt(4, KeyEvent.VK_5);
-		
+		archiveTab = new JPanel();
+ 		archiveTab.setLayout(new BoxLayout(archiveTab, BoxLayout.Y_AXIS));
+ 
+ 		// Prepare Course Selector Boxes
+ 		JButton genReport = new JButton("Create Report");
+ 		genReport.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+			    generateReport(archiveTable);
+			  }
+		});
+ 		Database db = new Database();
+ 		String[] semList = db.getSemesters();
+ 		JComboBox<String> archSemesterSelector = new JComboBox<String>(semList);
+ 		JComboBox<String> archCourseSelector   = new JComboBox<String>();
+ 		archSemesterSelector.setPrototypeDisplayValue("Computer Science II");
+ 		archCourseSelector.setPrototypeDisplayValue("Computer Science II");
+ 		archCourseSelector.setEditable(false);
+ 		
+ 		// Configure archSemesterSelector
+ 		archSemesterSelector.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+				if (e.getID() == 1001){
+					String selectedSemester = archSemesterSelector.getSelectedItem().toString();
+					String[] semCourses = db.getCourses(selectedSemester);
+					DefaultComboBoxModel<String> dcbm = new DefaultComboBoxModel<String>(semCourses);
+					archCourseSelector.setModel(dcbm);
+					archCourseSelector.setEditable(true);
+				}
+			  } 
+		});
+ 		
+ 		// Configure archCourseSelector
+ 		archCourseSelector.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+				if (e.getID() == 1001){
+					Global.currentCourse = archCourseSelector.getSelectedItem().toString();
+					DefaultTableModel dataModel = prepareTable(archSemesterSelector.getSelectedItem().toString(), archCourseSelector.getSelectedItem().toString(), true);
+					archiveTable.setModel(dataModel);
+					
+					// Center the values of the table
+					DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+					centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+					for (int i = 0; i < dataModel.getColumnCount(); i++ ){
+						if (i != 1){ 	// Do not center name column
+							archiveTable.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+						}
+					}
+				}
+			} 
+		});
+ 		
+ 
+ 		// Add Buttons to Control Panel
+ 		archivePanel1 = new JPanel();
+ 		archivePanel1.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 10));
+ 		archivePanel1.add(archSemesterSelector);
+ 		archivePanel1.add(archCourseSelector);
+ 		archivePanel1.add(genReport);
+ 		archivePanel1.setBorder(coursesControlTitle);
+ 		archivePanel1.setMaximumSize(archivePanel1.getPreferredSize());
+ 
+ 		// Archive Table Panel
+ 		archivePanel2 = new JPanel();
+ 		archivePanel2.setLayout(new GridLayout(1,1));
+ 		archiveTable  = new JTable();
+ 		archiveTableContainer = new JScrollPane(archiveTable);
+ 		archiveTableContainer.setPreferredSize(coursesTableContainer.getSize());
+ 		archivePanel2.add(archiveTableContainer);
+ 		archivePanel2.setBorder(coursesTableTitle);
+ 
+ 		// Initialize Archive Tab
+ 		archiveTab.add(archivePanel1);
+ 		archiveTab.add(archivePanel2);
+ 		tabbedPane.addTab("Archive", null, archiveTab, "Tab containing archived courses");
+		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+
 		mainFrame.add(tabbedPane);
 		mainFrame.setVisible(true);
 	}
-	
+
 	/*
 	 * New Course Wizard
 	 * 
@@ -264,11 +370,15 @@ public class GradebookGUI extends JApplet {
 	 * 
 	 */
 	public void createCourse(){
-		NewCourseWizardGUI newCourseWizard = new NewCourseWizardGUI();
+		NewCourseLoadingWindow nclw = new NewCourseLoadingWindow();
+		NewCourseWizardGUI newCourseWizard = new NewCourseWizardGUI(nclw);
 		if (newCourseWizard.COURSE_CREATED == 1){
-			String newCourse = newCourseWizard.getCourseName();
-			dcbm.addElement(newCourse);
-			courseSelector.setSelectedItem(newCourse);
+			if (newCourseWizard.SEMESTER_TYPE_FLAG == 0){
+				String newCourse = newCourseWizard.getCourseName();
+				dcbm.addElement(newCourse);
+				courseSelector.setSelectedItem(newCourse);
+			}
+			nclw.closeWindow();
 		}
 	}
 	
@@ -287,40 +397,43 @@ public class GradebookGUI extends JApplet {
 		    					   												currentCourse,
 		    					   												false);
 		
-		// Create the new assignment column
-		// TODO Create a TableColumn and set Model Index to save some work
-		TableColumn tableColumn = new TableColumn();
-		Object[]    modelColumn = new Object[tableModel.getRowCount()];  
-		tableColumn.setHeaderValue(newAssignmentWizard.getNewAssignment());
-		for (int i = 0; i < modelColumn.length; i++){
-			modelColumn[i] = " ";
-		}
-		coursesTable.addColumn(tableColumn);		// Add to JTable
-		
-		// Add column to table model
-		UPDATE_UI = false;  // Turn table update flag OFF
-		tableModel.addColumn(newAssignmentWizard.getNewAssignment(), modelColumn);
-		UPDATE_UI = true;   // Turn table update flag ON again
-		
-		// Although we can move a column in a JTable after adding it, we cannot do the same     //
-		// with the underlying DefaultTableModel (which only allows you to append columns).     //
-		// Therefore, we have to calculate how many moves we must make to get from the          // 
-		// table model to the desired JTable by getting a count of the number of courses        //
-		// that have been added since the last table update, and move columns back accordingly. //
-		
-		ASSIGNMENTS_ADDED = (tableModel.getColumnCount() - 1) - tableModel.findColumn("Grade");	// Calculate the number of courses added since update
-		for (int i = ASSIGNMENTS_ADDED; i > 0; i--){													
-			coursesTable.moveColumn(coursesTable.getColumnCount() - i,			// Get the new column at index "last - i"	 
-									coursesTable.getColumnCount() - (i+2));		// Move column to index "last - (i+1)", on the left side of "Average" column
-		}
-		coursesTable.setModel(tableModel); 
-		
-		// Center the values of the table
-		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
-		for (int i = 0; i < tableModel.getColumnCount(); i++ ){
-			if (i != 1){ 	// Do not center name column
-				coursesTable.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+		// Check to see if an assignment was created
+		if (newAssignmentWizard.ASSIGNMENT_CREATED > 0){
+			
+			// Create the new assignment column
+			TableColumn tableColumn = new TableColumn();
+			Object[]    modelColumn = new Object[tableModel.getRowCount()];  
+			tableColumn.setHeaderValue(newAssignmentWizard.getNewAssignment());
+			for (int i = 0; i < modelColumn.length; i++){
+				modelColumn[i] = " ";
+			}
+			coursesTable.addColumn(tableColumn);		// Add to JTable
+			
+			// Add column to table model
+			UPDATE_UI = false;  // Turn table update flag OFF
+			tableModel.addColumn(newAssignmentWizard.getNewAssignment(), modelColumn);
+			UPDATE_UI = true;   // Turn table update flag ON again
+			
+			// Although we can move a column in a JTable after adding it, we cannot do the same     //
+			// with the underlying DefaultTableModel (which only allows you to append columns).     //
+			// Therefore, we have to calculate how many moves we must make to get from the          // 
+			// table model to the desired JTable by getting a count of the number of courses        //
+			// that have been added since the last table update, and move columns back accordingly. //
+			
+			ASSIGNMENTS_ADDED = (tableModel.getColumnCount() - 1) - tableModel.findColumn("Grade");	// Calculate the number of courses added since update
+			for (int i = ASSIGNMENTS_ADDED; i > 0; i--){													
+				coursesTable.moveColumn(coursesTable.getColumnCount() - i,			// Get the new column at index "last - i"	 
+										coursesTable.getColumnCount() - (i+2));		// Move column to index "last - (i+1)", on the left side of "Average" column
+			}
+			coursesTable.setModel(tableModel); 
+			
+			// Center the values of the table
+			DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+			centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+			for (int i = 0; i < tableModel.getColumnCount(); i++ ){
+				if (i != 1){ 	// Do not center name column
+					coursesTable.getColumnModel().getColumn(i).setCellRenderer( centerRenderer );
+				}
 			}
 		}
 	}
@@ -340,26 +453,27 @@ public class GradebookGUI extends JApplet {
 																	   currentCourse,
 																	   String.valueOf(tableModel.getColumnCount()),
 																	   false);
-		// Create row object from Student Wizard
-		int columnCount = tableModel.getColumnCount();
-		Object[] row = new Object[columnCount];
-		row[0] = newStudentWizard.getStudentID();
-		row[1] = newStudentWizard.getStudentName();
-		for (int i = 2; i < row.length; i++){
-			row[i] = " ";
+		if (newStudentWizard.STUDENT_CREATED > 0){
+			
+			// Create row object from Student Wizard
+			int columnCount = tableModel.getColumnCount();
+			Object[] row = new Object[columnCount];
+			row[0] = newStudentWizard.getStudentID();
+			row[1] = newStudentWizard.getStudentName();
+			for (int i = 2; i < row.length; i++){
+				row[i] = " ";
+			}
+			
+			// Add row to table model
+			UPDATE_UI = false;  // Turn table update flag OFF
+			tableModel.addRow(row);
+			tableModel.moveRow(tableModel.getRowCount() - 1, 
+							   tableModel.getRowCount() - 1, 
+							   tableModel.getRowCount() - 2);
+			UPDATE_UI = true;   // Turn table update flag ON again
+			STUDENTS_ADDED += 1;
+			coursesTable.setModel(tableModel);
 		}
-		
-		// Add row to table model
-		UPDATE_UI = false;  // Turn table update flag OFF
-		tableModel.addRow(row);
-		tableModel.moveRow(tableModel.getRowCount() - 1, 
-						   tableModel.getRowCount() - 1, 
-						   tableModel.getRowCount() - 2);
-		UPDATE_UI = true;   // Turn table update flag ON again
-		STUDENTS_ADDED += 1;
-		coursesTable.setModel(tableModel);
-		
-		
 	}
 	
 	/*
@@ -372,7 +486,62 @@ public class GradebookGUI extends JApplet {
 	 */
 	public void editRubric(){
 		String currentCourse = courseSelector.getSelectedItem().toString();
+		NewRubricWizardGUI nrw = new NewRubricWizardGUI();
+		if (nrw.RECALCULATE_GRADES){
+			coursesTable.setModel(prepareTable(Constants.defaultSemester, currentCourse, false));
+			prepareRubricPanel(courseSelector.getSelectedItem().toString());
+			newAssignmentBtn.setEnabled(true);
+		}
+	}
+	
+	/*
+	 * Generate Report Function
+	 * 
+	 * This function is called when the "Generate Report" button is pressed. It will generate
+	 * a comma-separated text file containing the values of the table that is currently selelected.
+	 * 
+	 */
+	public void generateReport(JTable table){
+		JFileChooser fileChooser = new JFileChooser();	
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("CSV file", "csv");
+		fileChooser.setFileFilter(filter);
+		int option = fileChooser.showSaveDialog(table); 
 		
+		if (option == JFileChooser.APPROVE_OPTION){
+			File reportPath = fileChooser.getSelectedFile();		
+			String destination = reportPath.toString();
+			String[] splits = destination.split("\\.");
+			
+			if (splits.length == 1) {
+				destination += ".csv";
+				reportPath  = new File(destination);
+			}
+		
+			try {
+				FileWriter excelWriter = new FileWriter(reportPath);
+				TableModel model       = table.getModel();
+				int numCols 		   = model.getColumnCount(),
+				numRows 		       = model.getRowCount();
+			
+				for (int i = 0; i < numCols; i++)
+					excelWriter.write(model.getColumnName(i)+",");
+					excelWriter.write("\n");
+			
+					for (int i = 0; i <numRows; i++){	
+						for (int j = 0; j < numCols; j++) {
+							if (model.getValueAt(i, j) != null)
+								excelWriter.write(model.getValueAt(i, j).toString()+",");									
+						}
+						excelWriter.write("\n");
+					}
+			
+				excelWriter.flush();
+				excelWriter.close();	
+			} 
+			catch(IOException except) {
+			// TODO Exception catch	
+			}
+		}
 	}
 	
 	/*
@@ -387,8 +556,9 @@ public class GradebookGUI extends JApplet {
 	 * are then mapped to the DefaultTableModel which can then be applied to the JTable.
 	 * 
 	 */
-	public DefaultTableModel prepareTable(String course){
+	public DefaultTableModel prepareTable(String semester, String course, boolean ARCHIVE_TABLE){
 		
+		// Open Loading Progress Window
 		Component parent = (Component) this;
         ProgressMonitor monitor = new ProgressMonitor(parent, "Loading Progress", "Getting Started...", 0, 100);        
         
@@ -399,28 +569,28 @@ public class GradebookGUI extends JApplet {
 		loadingProgress = 0;
 		monitor.setProgress(loadingProgress);
 		monitor.setNote("Loading course data...");
-		String[] courseData = db.getCourseData(Constants.defaultSemester, 
+		String[] courseData = db.getCourseData(semester, 
 											   course);
 		
 		// Retrieve Assignment List
 		loadingProgress = 20;
 		monitor.setProgress(loadingProgress);
 		monitor.setNote("Loading assignment data...");
-		Global.assignments = db.getAssignmentList(Constants.defaultSemester, 
+		Global.assignments = db.getAssignmentList(semester, 
 												  course);
 		
 		// Retrieve Rubric Data
 		loadingProgress = 40;
 		monitor.setProgress(loadingProgress);
 		monitor.setNote("Loading rubric data...");
-		Global.gradeCategories = db.getRubric(Constants.defaultSemester, 
+		Global.gradeCategories = db.getRubric(semester, 
 											  course);
 		
 		// Retrieve Letter Grade Ranges
 		loadingProgress = 60;
 		monitor.setProgress(loadingProgress);
 		monitor.setNote("Loading grade scheme data...");
-		Global.gradeRanges = db.getGradeScheme(Constants.defaultSemester, 
+		Global.gradeRanges = db.getGradeScheme(semester, 
 											   course);
 		
 		// Begin loading coursebook interface
@@ -496,7 +666,8 @@ public class GradebookGUI extends JApplet {
 		    {
 				boolean IS_EDITABLE = true;
 				
-				if (row    == tableModel.getRowCount() - 1     ||
+				if (ARCHIVE_TABLE                              ||
+					row    == tableModel.getRowCount() - 1     ||
 					column == tableModel.findColumn("Grade")   ||
 					column == tableModel.findColumn("Average") ||
 					column == 0 || 
@@ -536,6 +707,7 @@ public class GradebookGUI extends JApplet {
 		monitor.setProgress(loadingProgress);
 		monitor.setNote("Done!");
 		monitor.close();
+		monitor = null;
 		
 		return tableModel;
 	}
@@ -564,7 +736,7 @@ public class GradebookGUI extends JApplet {
 			colCount = model.getColumnCount() - 2;
 		} else if (ASSIGNMENTS_ADDED > 0 && STUDENTS_ADDED == 0){
 			rowCount = model.getRowCount() - 1;
-			colCount = model.getColumnCount() - 1;
+			colCount = model.getColumnCount();
 		} else if (ASSIGNMENTS_ADDED == 0 && STUDENTS_ADDED > 0){
 			rowCount = model.getRowCount();
 			colCount = model.getColumnCount() - 2;
@@ -749,6 +921,7 @@ public class GradebookGUI extends JApplet {
 		} else {
 			dcbm = new DefaultComboBoxModel<String>();
 		}
+		Global.currentCourse = dcbm.getElementAt(0);
 		return dcbm;
 	}
 	
@@ -834,7 +1007,31 @@ public class GradebookGUI extends JApplet {
 			int weight = (int) (gc.getWeight() * 100);
 			coursesRubricPanel.add(new JLabel(gc.getCategory() + " = " + weight + "%"));
 		}
-		coursesRubricPanel.add(new JButton("Edit Rubric"));
+		
+		// Add "Edit Rubric" Button
+		if (Global.gradeCategories.isEmpty()){
+			editRubricBtn = new JButton("Create Rubric");
+			RUBRIC_INITIALIZED = false;
+		} else { 
+			editRubricBtn = new JButton("Edit Rubric");
+			RUBRIC_INITIALIZED = true;
+		}
+		editRubricBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+			    editRubric();
+			  }
+		});
+		
+		// Add "Create Report" Button
+		coursesReportBtn = new JButton ("Create Report");
+		coursesReportBtn.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) { 
+			    generateReport(coursesTable);
+			  }
+		});
+		
+		coursesRubricPanel.add(editRubricBtn);
+		coursesRubricPanel.add(coursesReportBtn);
 	}
 	
 	// Code to create tabbed section
